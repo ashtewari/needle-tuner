@@ -1,0 +1,46 @@
+caseOrdinal,input,expectedIntent,openAiIntent,openAiConfidence,openAiIntentMatch,openAiParamMatch,openAiError,openAiResponseType,openAiToolName,openAiDiagnosticKind,openAiFallbackReason,openAiDurationMs,openAiInputTokens,openAiOutputTokens,openAiTokensEstimated,openAiCostUsd,openAiCostSource,openAiModelName
+1,Where is my phone charger?,SEARCH_ITEM,SEARCH_ITEM,0.99,True,True,,,,,,2053,335,85,False,0.0001690,configured-pricing,gpt-5.6-luna
+2,Find the box with my winter coats,SEARCH_ITEM,SEARCH_ITEM,0.98,True,True,,,,,,1384,337,99,False,0.0001862,configured-pricing,gpt-5.6-luna
+3,Do I have any spare HDMI cables?,SEARCH_ITEM,SEARCH_ITEM,0.99,True,True,,,,,,1317,337,103,False,0.0001910,configured-pricing,gpt-5.6-luna
+4,Which box has the Christmas ornaments,SEARCH_ITEM,SEARCH_ITEM,0.99,True,True,,,,,,1360,336,98,False,0.0001848,configured-pricing,gpt-5.6-luna
+5,search for my passport,SEARCH_ITEM,SEARCH_ITEM,0.99,True,True,,,,,,1153,334,81,False,0.0001640,configured-pricing,gpt-5.6-luna
+6,Add a drill to the garage tools box,ADD_ITEM,ADD_ITEM,0.99,True,False,,,,,,2689,338,105,False,0.0001936,configured-pricing,gpt-5.6-luna
+7,"I just bought 3 new notebooks, put them in the office box",ADD_ITEM,ADD_ITEM,0.99,True,False,,,,,,3192,344,120,False,0.0002128,configured-pricing,gpt-5.6-luna
+8,put a spare keyboard into box 12,ADD_ITEM,ADD_ITEM,0.99,True,False,,,,,,1223,338,116,False,0.0002068,configured-pricing,gpt-5.6-luna
+9,register this new lamp under living room items,ADD_ITEM,ADD_ITEM,0.98,True,False,,,,,,1274,338,120,False,0.0002116,configured-pricing,gpt-5.6-luna
+10,add two extra blankets to the linen closet box,ADD_ITEM,ADD_ITEM,0.99,True,False,,,,,,1147,339,111,False,0.0002010,configured-pricing,gpt-5.6-luna
+11,change the quantity of screwdrivers to 5,UPDATE_ITEM,UPDATE_ITEM,0.99,True,True,,,,,,1201,339,92,False,0.0001782,configured-pricing,gpt-5.6-luna
+12,rename the label on my old laptop to 'spare laptop',UPDATE_ITEM,UPDATE_ITEM,0.99,True,False,,,,,,1918,342,107,False,0.0001968,configured-pricing,gpt-5.6-luna
+13,move the tennis rackets to the sports box,UPDATE_ITEM,UPDATE_ITEM,0.98,True,False,,,,,,1216,339,99,False,0.0001866,configured-pricing,gpt-5.6-luna
+14,update the description for my camera,UPDATE_ITEM,UPDATE_ITEM,0.98,True,True,,,,,,1410,336,117,False,0.0002076,configured-pricing,gpt-5.6-luna
+15,correct the item count of batteries to 12,UPDATE_ITEM,UPDATE_ITEM,0.99,True,True,,,,,,1272,339,93,False,0.0001794,configured-pricing,gpt-5.6-luna
+16,delete the broken toaster from inventory,DELETE_ITEM,DELETE_ITEM,0.99,True,False,,,,,,1135,336,94,False,0.0001800,configured-pricing,gpt-5.6-luna
+17,"remove the old phone case, it's gone",DELETE_ITEM,DELETE_ITEM,0.99,True,False,,,,,,1179,338,105,False,0.0001936,configured-pricing,gpt-5.6-luna
+18,get rid of the expired sunscreen entry,DELETE_ITEM,DELETE_ITEM,0.98,True,False,,,,,,1283,337,97,False,0.0001838,configured-pricing,gpt-5.6-luna
+19,"I donated the treadmill, delete it",DELETE_ITEM,DELETE_ITEM,0.99,True,True,,,,,,1333,337,93,False,0.0001790,configured-pricing,gpt-5.6-luna
+20,remove the duplicate entry for extension cords,DELETE_ITEM,DELETE_ITEM,0.98,True,True,,,,,,1044,337,107,False,0.0001958,configured-pricing,gpt-5.6-luna
+21,create a new box called garage shelf 3,MANAGE_BOX,MANAGE_BOX,0.99,True,True,,,,,,3022,339,89,False,0.0001746,configured-pricing,gpt-5.6-luna
+22,rename box 7 to 'kitchen extras',MANAGE_BOX,MANAGE_BOX,0.99,True,False,,,,,,1718,339,104,False,0.0001926,configured-pricing,gpt-5.6-luna
+23,delete the empty box labeled 'old office',MANAGE_BOX,MANAGE_BOX,0.99,True,True,,,,,,34480,338,108,False,0.0001972,configured-pricing,gpt-5.6-luna
+24,merge the two garage boxes into one,MANAGE_BOX,MANAGE_BOX,0.98,True,True,,,,,,1103,337,118,False,0.0002090,configured-pricing,gpt-5.6-luna
+25,set up a new container for holiday decorations,MANAGE_BOX,MANAGE_BOX,0.99,True,True,,,,,,1172,338,99,False,0.0001864,configured-pricing,gpt-5.6-luna
+26,show me everything in my inventory,VIEW_INVENTORY,VIEW_INVENTORY,0.99,True,True,,,,,,856,336,68,False,0.0001488,configured-pricing,gpt-5.6-luna
+27,give me a report of all boxes in the garage,VIEW_INVENTORY,VIEW_INVENTORY,0.98,True,True,,,,,,1221,340,96,False,0.0001832,configured-pricing,gpt-5.6-luna
+28,how many items do I have total,VIEW_INVENTORY,VIEW_INVENTORY,0.99,True,True,,,,,,1225,337,101,False,0.0001886,configured-pricing,gpt-5.6-luna
+29,list all the boxes I own,VIEW_INVENTORY,MANAGE_BOX,0.98,False,True,,,,,,1162,336,75,False,0.0001572,configured-pricing,gpt-5.6-luna
+30,what's in storage unit 4,VIEW_INVENTORY,VIEW_INVENTORY,0.98,True,True,,,,,,1313,337,102,False,0.0001898,configured-pricing,gpt-5.6-luna
+31,upload a picture of my new blender,UPLOAD_PHOTO,UPLOAD_PHOTO,0.99,True,True,,,,,,1353,337,124,False,0.0002162,configured-pricing,gpt-5.6-luna
+32,attach a photo to the garage tools box,UPLOAD_PHOTO,UPLOAD_PHOTO,0.99,True,False,,,,,,1268,338,112,False,0.0002020,configured-pricing,gpt-5.6-luna
+33,I want to take a picture of this box before sealing it,UPLOAD_PHOTO,UPLOAD_PHOTO,0.98,True,True,,,,,,1272,342,124,False,0.0002172,configured-pricing,gpt-5.6-luna
+34,add an image for the antique vase,UPLOAD_PHOTO,UPLOAD_PHOTO,0.99,True,True,,,,,,1180,337,102,False,0.0001898,configured-pricing,gpt-5.6-luna
+35,scan this receipt and attach it to the electronics box,UPLOAD_PHOTO,UPLOAD_PHOTO,0.98,True,False,,,,,,2773,340,124,False,0.0002168,configured-pricing,gpt-5.6-luna
+36,how does this app work?,GENERAL_HELP,GENERAL_HELP,0.99,True,True,,,,,,1137,335,96,False,0.0001822,configured-pricing,gpt-5.6-luna
+37,what can you help me with,GENERAL_HELP,GENERAL_HELP,0.99,True,True,,,,,,1008,336,83,False,0.0001668,configured-pricing,gpt-5.6-luna
+38,explain how to label boxes properly,GENERAL_HELP,GENERAL_HELP,0.98,True,True,,,,,,1128,337,105,False,0.0001934,configured-pricing,gpt-5.6-luna
+39,"I'm new here, how do I get started",GENERAL_HELP,GENERAL_HELP,0.99,True,True,,,,,,1174,339,85,False,0.0001698,configured-pricing,gpt-5.6-luna
+40,what features does WhichBox offer,GENERAL_HELP,GENERAL_HELP,0.99,True,True,,,,,,6703,336,81,False,0.0001644,configured-pricing,gpt-5.6-luna
+41,hmm,UNCLEAR,UNCLEAR,0.99,True,True,,,,,,1145,332,68,False,0.0001480,configured-pricing,gpt-5.6-luna
+42,thing box stuff maybe later,UNCLEAR,UNCLEAR,0.99,True,True,,,,,,1342,335,114,False,0.0002038,configured-pricing,gpt-5.6-luna
+43,add the drill but also where is it and delete the old one,UNCLEAR,ADD_ITEM,0.72,False,True,,,,,,1550,343,169,False,0.0002714,configured-pricing,gpt-5.6-luna
+44,cna you fnid my chraeger,UNCLEAR,SEARCH_ITEM,0.98,False,True,,,,,,1215,339,107,False,0.0001962,configured-pricing,gpt-5.6-luna
+45,asdkjhaskjdh,UNCLEAR,UNCLEAR,0.99,True,True,,,,,,1123,336,73,False,0.0001548,configured-pricing,gpt-5.6-luna

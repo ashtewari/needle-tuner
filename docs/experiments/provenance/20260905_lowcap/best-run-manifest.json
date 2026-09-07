@@ -1,0 +1,21 @@
+{
+  "providerKey": "needleTuned20260905033826",
+  "displayName": "Needle Tuned (20260905_033826)",
+  "weightsFile": "whichbox_needle_tuned.cact",
+  "sha256": "7583faf4775937e2ab5ff1a1027d7016c6436b5f2fa545acf14aa3e29b52c4f0",
+  "createdUtc": "2026-09-05T03:44:42Z",
+  "datasetPath": "IntentEvalHarness/Dataset/training_set.300.jsonl",
+  "adapterPath": "IntentEvalHarness/weights/20260905_033826/checkpoints/needle_lora.pkl",
+  "command": {
+    "script": "scripts/needle-finetune.sh",
+    "runName": "20260905_033826",
+    "epochs": 5,
+    "loraRank": 8,
+    "loraAlpha": 16,
+    "learningRate": 5E-05,
+    "batchSize": 4,
+    "maxLen": 1024,
+    "valSplit": 0.1,
+    "generateExamples": 0
+  }
+}

@@ -1,0 +1,54 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+**/appsettings.Development.json
+secrets/
+**/secrets/
+
+# .NET
+[Bb]in/
+[Oo]bj/
+TestResults/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Python environments, caches, and tooling state
+.venv-needle/
+**/.venv-needle/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Native engines acquired locally
+IntentEvalHarness/native/.acquire-*/
+IntentEvalHarness/native/**/libneedle.dll
+IntentEvalHarness/native/**/libneedle.so
+IntentEvalHarness/native/**/libneedle.dylib
+IntentEvalHarness/native/**/acquisition.json
+
+# Generated model data: authored READMEs and manifests remain versionable.
+*.cact
+*.pkl
+*.ckpt
+*.safetensors
+*.pt
+*.pth
+*.onnx
+IntentEvalHarness/weights/**
+!IntentEvalHarness/weights/README.md
+
+# Runtime reports and local artifacts
+IntentEvalHarness/out/
+artifacts/**
+!artifacts/README.md
+*.log

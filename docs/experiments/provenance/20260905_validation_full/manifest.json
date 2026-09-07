@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "bundleId": "20260905_validation_full",
+  "purpose": "Sanitized clean-room WSL validation provenance",
+  "evidenceBasis": {
+    "sanitizedSummary": "source-evidence.md",
+    "publishedTargetReferences": [
+      "docs/experiments/EXPERIMENT_LOG.md",
+      "IntentEvalHarness/integrity.manifest.json",
+      "IntentEvalHarness/Baselines/openAi_frozen_20260823_full45/"
+    ]
+  },
+  "run": {
+    "trainingStartUtc": "00:36:57.347Z",
+    "trainingEndUtc": "01:04:28.564Z",
+    "trainingDuration": "27m31s",
+    "trainingDurationMinutes": 27.516,
+    "dataset": "IntentEvalHarness/Dataset/training_set.300.jsonl",
+    "datasetRows": 345,
+    "heldOutRows": 45,
+    "epochs": 30,
+    "loraRank": 16,
+    "loraAlpha": 32,
+    "learningRate": 0.0001,
+    "batchSize": 4,
+    "maxLen": 1024,
+    "valSplit": 0.1,
+    "hardware": "RTX 3060, 12 GB VRAM, WSL 2",
+    "candidateSha256": "8518c4774ebb41573021ab86f8ab6e5dc06422ac730b9ebbd30c866b26b03295",
+    "candidateSha256Status": "manifest/log provenance; omitted artifact unavailable",
+    "baseCheckpointRevision": "32e9e3a93b205f786929697446ae669cf0a84579",
+    "baseCheckpointBytes": 90426504,
+    "baseCheckpointSha256": "4b0a972d163ffc7678fb3c36bace508114872e9d2ce9e10f225825752d3795bc",
+    "nativeBinarySha256Status": "not retained; package/fetch provenance only"
+  },
+  "results": {
+    "candidate": {
+      "intent": "19/45 (42.22%)",
+      "parameters": "23/45 (51.11%)",
+      "fallbacks": 15
+    },
+    "base": {
+      "intent": "28/45 (62.22%)",
+      "parameters": "30/45 (66.67%)",
+      "fallbacks": 9
+    },
+    "frozenOpenAi": {
+      "intent": "42/45 (93.33%)",
+      "parameters": "32/45 (71.11%)",
+      "fallbacks": 0
+    }
+  },
+  "verification": {
+    "historicalCleanRoomPostRun": {
+      "dotnetTests": "32/32",
+      "scope": "WSL post-training verification during the recorded run"
+    },
+    "laterReviewerFix": {
+      "dotnetTests": "36/36",
+      "scope": "later bounded repository verification after reviewer fixes; no training was run"
+    }
+  },
+  "retainedFiles": [
+    "README.md",
+    "validation-summary.md",
+    "source-evidence.md",
+    "manifest.json"
+  ],
+  "excluded": [
+    "weights",
+    "checkpoints",
+    "adapters",
+    "native binaries",
+    "local environments",
+    "runtime reports",
+    "raw logs",
+    "raw transcripts",
+    "usernames",
+    "absolute paths",
+    "secrets"
+  ]
+}

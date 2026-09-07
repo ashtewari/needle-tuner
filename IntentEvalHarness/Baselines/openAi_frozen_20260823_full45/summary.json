@@ -1,0 +1,198 @@
+{
+  "totalCases": 45,
+  "configuredProviders": [
+    {
+      "key": "openAi",
+      "displayName": "OpenAI",
+      "enabled": true
+    }
+  ],
+  "providers": {
+    "openAi": {
+      "displayName": "OpenAI",
+      "enabled": true,
+      "evaluatedCases": 45,
+      "errorCases": 0,
+      "intentAccuracy": 0.9333333333333333,
+      "parameterAccuracy": 0.7111111111111111,
+      "averageConfidence": 0.9808888888888887,
+      "totalDurationMs": 102426,
+      "averageDurationMs": 2276.133333333333,
+      "runtimeMeasuredCases": 45,
+      "totalInputTokens": 15195,
+      "totalOutputTokens": 4569,
+      "tokenUsageCases": 45,
+      "tokenEstimatedCases": 0,
+      "totalCostUsd": 0.0085218,
+      "averageCostUsd": 0.0001893733333333333333333333,
+      "costMeasuredCases": 45,
+      "costSource": "configured-pricing",
+      "modelName": "gpt-5.6-luna",
+      "perIntent": {
+        "ADD_ITEM": {
+          "totalCases": 5,
+          "evaluatedCases": 5,
+          "errorCases": 0,
+          "intentAccuracy": 1,
+          "parameterAccuracy": 0,
+          "predictedIntentCounts": {
+            "ADD_ITEM": 5
+          }
+        },
+        "DELETE_ITEM": {
+          "totalCases": 5,
+          "evaluatedCases": 5,
+          "errorCases": 0,
+          "intentAccuracy": 1,
+          "parameterAccuracy": 0.4,
+          "predictedIntentCounts": {
+            "DELETE_ITEM": 5
+          }
+        },
+        "GENERAL_HELP": {
+          "totalCases": 5,
+          "evaluatedCases": 5,
+          "errorCases": 0,
+          "intentAccuracy": 1,
+          "parameterAccuracy": 1,
+          "predictedIntentCounts": {
+            "GENERAL_HELP": 5
+          }
+        },
+        "MANAGE_BOX": {
+          "totalCases": 5,
+          "evaluatedCases": 5,
+          "errorCases": 0,
+          "intentAccuracy": 1,
+          "parameterAccuracy": 0.8,
+          "predictedIntentCounts": {
+            "MANAGE_BOX": 5
+          }
+        },
+        "SEARCH_ITEM": {
+          "totalCases": 5,
+          "evaluatedCases": 5,
+          "errorCases": 0,
+          "intentAccuracy": 1,
+          "parameterAccuracy": 1,
+          "predictedIntentCounts": {
+            "SEARCH_ITEM": 5
+          }
+        },
+        "UNCLEAR": {
+          "totalCases": 5,
+          "evaluatedCases": 5,
+          "errorCases": 0,
+          "intentAccuracy": 0.6,
+          "parameterAccuracy": 1,
+          "predictedIntentCounts": {
+            "ADD_ITEM": 1,
+            "SEARCH_ITEM": 1,
+            "UNCLEAR": 3
+          }
+        },
+        "UPDATE_ITEM": {
+          "totalCases": 5,
+          "evaluatedCases": 5,
+          "errorCases": 0,
+          "intentAccuracy": 1,
+          "parameterAccuracy": 0.6,
+          "predictedIntentCounts": {
+            "UPDATE_ITEM": 5
+          }
+        },
+        "UPLOAD_PHOTO": {
+          "totalCases": 5,
+          "evaluatedCases": 5,
+          "errorCases": 0,
+          "intentAccuracy": 1,
+          "parameterAccuracy": 0.6,
+          "predictedIntentCounts": {
+            "UPLOAD_PHOTO": 5
+          }
+        },
+        "VIEW_INVENTORY": {
+          "totalCases": 5,
+          "evaluatedCases": 5,
+          "errorCases": 0,
+          "intentAccuracy": 0.8,
+          "parameterAccuracy": 1,
+          "predictedIntentCounts": {
+            "MANAGE_BOX": 1,
+            "VIEW_INVENTORY": 4
+          }
+        }
+      },
+      "confusionMatrix": {
+        "ADD_ITEM": {
+          "ADD_ITEM": 5
+        },
+        "DELETE_ITEM": {
+          "DELETE_ITEM": 5
+        },
+        "GENERAL_HELP": {
+          "GENERAL_HELP": 5
+        },
+        "MANAGE_BOX": {
+          "MANAGE_BOX": 5
+        },
+        "SEARCH_ITEM": {
+          "SEARCH_ITEM": 5
+        },
+        "UNCLEAR": {
+          "ADD_ITEM": 1,
+          "SEARCH_ITEM": 1,
+          "UNCLEAR": 3
+        },
+        "UPDATE_ITEM": {
+          "UPDATE_ITEM": 5
+        },
+        "UPLOAD_PHOTO": {
+          "UPLOAD_PHOTO": 5
+        },
+        "VIEW_INVENTORY": {
+          "MANAGE_BOX": 1,
+          "VIEW_INVENTORY": 4
+        }
+      },
+      "confidenceThresholds": [
+        {
+          "threshold": 0.25,
+          "casesAtOrAboveThreshold": 45,
+          "casesBelowThreshold": 0,
+          "coverage": 1,
+          "intentAccuracyAtOrAboveThreshold": 0.9333333333333333,
+          "parameterAccuracyAtOrAboveThreshold": 0.7111111111111111
+        },
+        {
+          "threshold": 0.5,
+          "casesAtOrAboveThreshold": 45,
+          "casesBelowThreshold": 0,
+          "coverage": 1,
+          "intentAccuracyAtOrAboveThreshold": 0.9333333333333333,
+          "parameterAccuracyAtOrAboveThreshold": 0.7111111111111111
+        },
+        {
+          "threshold": 0.75,
+          "casesAtOrAboveThreshold": 44,
+          "casesBelowThreshold": 1,
+          "coverage": 0.9777777777777777,
+          "intentAccuracyAtOrAboveThreshold": 0.9545454545454546,
+          "parameterAccuracyAtOrAboveThreshold": 0.7045454545454546
+        },
+        {
+          "threshold": 0.9,
+          "casesAtOrAboveThreshold": 44,
+          "casesBelowThreshold": 1,
+          "coverage": 0.9777777777777777,
+          "intentAccuracyAtOrAboveThreshold": 0.9545454545454546,
+          "parameterAccuracyAtOrAboveThreshold": 0.7045454545454546
+        }
+      ],
+      "responseTypes": {},
+      "diagnosticKinds": {},
+      "selectedTools": {},
+      "fallbackCases": 0
+    }
+  }
+}

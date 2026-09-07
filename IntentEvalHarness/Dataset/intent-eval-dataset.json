@@ -1,0 +1,55 @@
+[
+  { "input": "Where is my phone charger?", "expectedIntent": "SEARCH_ITEM", "expectedParameters": { "itemName": "phone charger" } },
+  { "input": "Find the box with my winter coats", "expectedIntent": "SEARCH_ITEM", "expectedParameters": { "itemName": "winter coats" } },
+  { "input": "Do I have any spare HDMI cables?", "expectedIntent": "SEARCH_ITEM", "expectedParameters": { "itemName": "HDMI cables" } },
+  { "input": "Which box has the Christmas ornaments", "expectedIntent": "SEARCH_ITEM", "expectedParameters": { "itemName": "Christmas ornaments" } },
+  { "input": "search for my passport", "expectedIntent": "SEARCH_ITEM", "expectedParameters": { "itemName": "passport" } },
+
+  { "input": "Add a drill to the garage tools box", "expectedIntent": "ADD_ITEM", "expectedParameters": { "itemName": "drill", "boxLabel": "garage tools" } },
+  { "input": "I just bought 3 new notebooks, put them in the office box", "expectedIntent": "ADD_ITEM", "expectedParameters": { "itemName": "notebooks", "boxLabel": "office", "quantity": 3 } },
+  { "input": "put a spare keyboard into box 12", "expectedIntent": "ADD_ITEM", "expectedParameters": { "itemName": "keyboard", "boxLabel": "12" } },
+  { "input": "register this new lamp under living room items", "expectedIntent": "ADD_ITEM", "expectedParameters": { "itemName": "lamp", "boxLabel": "living room" } },
+  { "input": "add two extra blankets to the linen closet box", "expectedIntent": "ADD_ITEM", "expectedParameters": { "itemName": "blankets", "boxLabel": "linen closet", "quantity": 2 } },
+
+  { "input": "change the quantity of screwdrivers to 5", "expectedIntent": "UPDATE_ITEM", "expectedParameters": { "itemName": "screwdrivers", "quantity": 5 } },
+  { "input": "rename the label on my old laptop to 'spare laptop'", "expectedIntent": "UPDATE_ITEM", "expectedParameters": { "itemName": "laptop" } },
+  { "input": "move the tennis rackets to the sports box", "expectedIntent": "UPDATE_ITEM", "expectedParameters": { "itemName": "tennis rackets", "boxLabel": "sports" } },
+  { "input": "update the description for my camera", "expectedIntent": "UPDATE_ITEM", "expectedParameters": { "itemName": "camera" } },
+  { "input": "correct the item count of batteries to 12", "expectedIntent": "UPDATE_ITEM", "expectedParameters": { "itemName": "batteries", "quantity": 12 } },
+
+  { "input": "delete the broken toaster from inventory", "expectedIntent": "DELETE_ITEM", "expectedParameters": { "itemName": "toaster" } },
+  { "input": "remove the old phone case, it's gone", "expectedIntent": "DELETE_ITEM", "expectedParameters": { "itemName": "phone case" } },
+  { "input": "get rid of the expired sunscreen entry", "expectedIntent": "DELETE_ITEM", "expectedParameters": { "itemName": "sunscreen" } },
+  { "input": "I donated the treadmill, delete it", "expectedIntent": "DELETE_ITEM", "expectedParameters": { "itemName": "treadmill" } },
+  { "input": "remove the duplicate entry for extension cords", "expectedIntent": "DELETE_ITEM", "expectedParameters": { "itemName": "extension cords" } },
+
+  { "input": "create a new box called garage shelf 3", "expectedIntent": "MANAGE_BOX", "expectedParameters": { "boxLabel": "garage shelf 3" } },
+  { "input": "rename box 7 to 'kitchen extras'", "expectedIntent": "MANAGE_BOX", "expectedParameters": { "boxLabel": "kitchen extras" } },
+  { "input": "delete the empty box labeled 'old office'", "expectedIntent": "MANAGE_BOX", "expectedParameters": { "boxLabel": "old office" } },
+  { "input": "merge the two garage boxes into one", "expectedIntent": "MANAGE_BOX", "expectedParameters": {} },
+  { "input": "set up a new container for holiday decorations", "expectedIntent": "MANAGE_BOX", "expectedParameters": { "boxLabel": "holiday decorations" } },
+
+  { "input": "show me everything in my inventory", "expectedIntent": "VIEW_INVENTORY", "expectedParameters": {} },
+  { "input": "give me a report of all boxes in the garage", "expectedIntent": "VIEW_INVENTORY", "expectedParameters": {} },
+  { "input": "how many items do I have total", "expectedIntent": "VIEW_INVENTORY", "expectedParameters": {} },
+  { "input": "list all the boxes I own", "expectedIntent": "VIEW_INVENTORY", "expectedParameters": {} },
+  { "input": "what's in storage unit 4", "expectedIntent": "VIEW_INVENTORY", "expectedParameters": { "boxLabel": "storage unit 4" } },
+
+  { "input": "upload a picture of my new blender", "expectedIntent": "UPLOAD_PHOTO", "expectedParameters": { "itemName": "blender" } },
+  { "input": "attach a photo to the garage tools box", "expectedIntent": "UPLOAD_PHOTO", "expectedParameters": { "boxLabel": "garage tools" } },
+  { "input": "I want to take a picture of this box before sealing it", "expectedIntent": "UPLOAD_PHOTO", "expectedParameters": {} },
+  { "input": "add an image for the antique vase", "expectedIntent": "UPLOAD_PHOTO", "expectedParameters": { "itemName": "antique vase" } },
+  { "input": "scan this receipt and attach it to the electronics box", "expectedIntent": "UPLOAD_PHOTO", "expectedParameters": { "boxLabel": "electronics" } },
+
+  { "input": "how does this app work?", "expectedIntent": "GENERAL_HELP", "expectedParameters": {} },
+  { "input": "what can you help me with", "expectedIntent": "GENERAL_HELP", "expectedParameters": {} },
+  { "input": "explain how to label boxes properly", "expectedIntent": "GENERAL_HELP", "expectedParameters": {} },
+  { "input": "I'm new here, how do I get started", "expectedIntent": "GENERAL_HELP", "expectedParameters": {} },
+  { "input": "what features does WhichBox offer", "expectedIntent": "GENERAL_HELP", "expectedParameters": {} },
+
+  { "input": "hmm", "expectedIntent": "UNCLEAR", "expectedParameters": {}, "notes": "Empty-ish input" },
+  { "input": "thing box stuff maybe later", "expectedIntent": "UNCLEAR", "expectedParameters": {}, "notes": "Nonsensical/ambiguous phrasing" },
+  { "input": "add the drill but also where is it and delete the old one", "expectedIntent": "UNCLEAR", "expectedParameters": {}, "notes": "Multi-intent conflict: add + search + delete in one sentence" },
+  { "input": "cna you fnid my chraeger", "expectedIntent": "UNCLEAR", "expectedParameters": {}, "notes": "Heavy typos; may still resolve to SEARCH_ITEM depending on model robustness" },
+  { "input": "asdkjhaskjdh", "expectedIntent": "UNCLEAR", "expectedParameters": {}, "notes": "Gibberish input" }
+]

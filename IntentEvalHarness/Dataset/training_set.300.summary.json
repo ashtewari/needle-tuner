@@ -1,0 +1,23 @@
+{
+  "sourcePath": "Dataset/needle-training-seed.300.json",
+  "jsonlPath": "Dataset/training_set.300.jsonl",
+  "summaryPath": "Dataset/training_set.300.summary.json",
+  "totalExamples": 345,
+  "abstainExamples": 46,
+  "intentCounts": {
+    "ADD_ITEM": 30,
+    "DELETE_ITEM": 30,
+    "GENERAL_HELP": 27,
+    "MANAGE_BOX": 44,
+    "SEARCH_ITEM": 40,
+    "UNCLEAR": 46,
+    "UPDATE_ITEM": 53,
+    "UPLOAD_PHOTO": 32,
+    "VIEW_INVENTORY": 43
+  },
+  "difficultyCounts": {
+    "easy": 147,
+    "hard": 27,
+    "medium": 171
+  }
+}

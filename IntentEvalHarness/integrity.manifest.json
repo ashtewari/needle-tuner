@@ -1,0 +1,95 @@
+{
+  "sourceHead": "a7b773fa87eec72211bec9dfbc5cebd0a171145a",
+  "files": [
+    {
+      "path": "Dataset/intent-eval-dataset.json",
+      "bytes": 6400,
+      "sha256": "532095f9f1f4ca9c9c73c484b42b7209de08ab442eb161635b6b3bf5d4931583",
+      "disposition": "byte-preserved"
+    },
+    {
+      "path": "Dataset/needle-training-seed.json",
+      "bytes": 38641,
+      "sha256": "e9a34fc7c63179c712848c867f1fa8a72d5cdfcd818a69e69cdd7a2db67c85d4",
+      "disposition": "byte-preserved"
+    },
+    {
+      "path": "Dataset/needle-training-seed.300.json",
+      "bytes": 92333,
+      "sha256": "1fad6eb0f4fc89a0a5343cadd7256bb325a2f6b92c23c2dd4fc595472d51c3ca",
+      "disposition": "generated-frozen"
+    },
+    {
+      "path": "Dataset/training_set.seed.jsonl",
+      "bytes": 601292,
+      "sha256": "3b91cd9f70582869eec66b70c63a1a95b8992df9916fef3cfe8c632bc228887d",
+      "disposition": "generated-frozen"
+    },
+    {
+      "path": "Dataset/training_set.seed.summary.json",
+      "bytes": 541,
+      "sha256": "cd7eadb1280193b27e59818fc95307e5c2100b4b7a80c827e3fde34f489de329",
+      "disposition": "generated-frozen"
+    },
+    {
+      "path": "Dataset/training_set.300.jsonl",
+      "bytes": 1243139,
+      "sha256": "cfcc9774bc592f59489ef47ac4399b218715c819e75e9babd2384575893f37ec",
+      "disposition": "generated-frozen"
+    },
+    {
+      "path": "Dataset/training_set.300.summary.json",
+      "bytes": 523,
+      "sha256": "e822458aea345632a4c4e10d9052de04ce74a1838cfbf6ea04a19b8d5f4210a5",
+      "disposition": "generated-frozen"
+    },
+    {
+      "path": "Dataset/training_set.300.oversample_unclear.jsonl",
+      "bytes": 1405795,
+      "sha256": "605b53246d68bc7f6e4ac5ea0774938a727b8f0d49d836103591d86ff33e3e53",
+      "disposition": "generated-frozen"
+    },
+    {
+      "path": "Dataset/README.md",
+      "bytes": 1875,
+      "sha256": "92b240538d7a9983cb0a6552c7d2a822b2b10f14ff5f4118af0a78ceabc2325c",
+      "disposition": "source-curated"
+    },
+    {
+      "path": "Dataset/artifact-manifest.json",
+      "bytes": 5088,
+      "sha256": "64ed341efcf6669259861815e640b25a0d1755b36aa51226e094f95ceda2bfbe",
+      "disposition": "validation-contract"
+    },
+    {
+      "path": "Baselines/openAi_frozen_20260823_full45/README.md",
+      "bytes": 1015,
+      "sha256": "cd2b66ded1723f0652582dc0dfdc3d5902b989d77997cbfd5e8a688ea69cf345",
+      "disposition": "byte-preserved"
+    },
+    {
+      "path": "Baselines/openAi_frozen_20260823_full45/manifest.json",
+      "bytes": 837,
+      "sha256": "417d6b28b678c891faea4dc69a547cfa32bb8ebead6fb99ae8690475e1b4657f",
+      "disposition": "byte-preserved"
+    },
+    {
+      "path": "Baselines/openAi_frozen_20260823_full45/needle_diagnostics.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "disposition": "byte-preserved"
+    },
+    {
+      "path": "Baselines/openAi_frozen_20260823_full45/results.csv",
+      "bytes": 6827,
+      "sha256": "718978783bad718b4f4a2ba6c99e03af440b8e22f8b371f76beadd0d3d6667e9",
+      "disposition": "byte-preserved"
+    },
+    {
+      "path": "Baselines/openAi_frozen_20260823_full45/summary.json",
+      "bytes": 5560,
+      "sha256": "1f8fbc9ec12e8a42bcc26d5eadd56c0bf74e8051b14c1c6f04197c5fab8e3a91",
+      "disposition": "byte-preserved"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+# Created by venv; see https://docs.python.org/3/library/venv.html
+
+.venv-needle/
+
+# Local Needle native engine artifacts.
+native/*.dll
+native/*.so
+
+# Local Needle fine-tune outputs.
+weights/*
+!weights/README.md
+

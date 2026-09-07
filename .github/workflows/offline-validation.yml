@@ -1,0 +1,53 @@
+name: Offline validation
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.310
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Regenerate and verify datasets
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/generate-training-datasets.ps1
+
+      - name: Restore, build, and test .NET harness
+        run: dotnet test Needle.sln --nologo
+
+      - name: Verify harness help and script syntax
+        run: |
+          dotnet run --project IntentEvalHarness -- --help
+          bash -n scripts/bootstrap-wsl.sh scripts/acquire-needle-native.sh scripts/needle-finetune.sh
+          bash scripts/bootstrap-wsl.sh --help
+          bash scripts/acquire-needle-native.sh --dry-run
+          bash scripts/needle-finetune.sh --dry-run
+          bash scripts/needle-finetune.sh --smoke-test --dry-run
+
+      - name: Verify PowerShell dry-run paths
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/acquire-needle-native.ps1 -DryRun
+          pwsh -NoProfile -File scripts/needle-finetune.ps1 -DryRun
+          pwsh -NoProfile -File scripts/needle-finetune.ps1 -SmokeTest -DryRun
+
+      - name: Exercise loss-plot utility
+        run: |
+          mkdir -p artifacts/validation/ci
+          printf 'step 1/2 loss 0.80\nepoch 1/2 loss 0.70 val 0.75\nepoch 2/2 loss 0.50 val 0.55\n' > artifacts/validation/ci/finetune.log
+          python3 scripts/needle-loss-plot.py artifacts/validation/ci/finetune.log artifacts/validation/ci/loss_curve.svg
+          test -s artifacts/validation/ci/loss_curve.svg

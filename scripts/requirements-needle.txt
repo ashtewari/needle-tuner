@@ -1,0 +1,10 @@
+# Compatibility set observed in the verified source WSL environment:
+# Python 3.12, cactus-needle 2.0.10, JAX/JAXLIB 0.11.1, Flax 0.12.9,
+# and Optax 0.2.8. Do not use the unsupported cactus-needle "train" extra.
+jax==0.11.1
+jaxlib==0.11.1
+flax==0.12.9
+optax==0.2.8
+# Required at runtime by cactus-needle; pin direct dependencies so pip check succeeds.
+huggingface-hub==1.30.0
+sentencepiece==0.2.2

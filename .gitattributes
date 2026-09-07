@@ -1,0 +1,12 @@
+* text=auto eol=lf
+
+*.sln text eol=crlf
+*.dll binary
+*.so binary
+*.dylib binary
+*.cact binary
+*.pkl binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.svg text eol=lf

@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "sourceInventory": {
+    "sourceHead": "a7b773fa87eec72211bec9dfbc5cebd0a171145a",
+    "authoritativeSnapshot": "whichboxapp current working tree/index snapshot"
+  },
+  "artifacts": [
+    {
+      "path": "intent-eval-dataset.json",
+      "kind": "held-out-evaluation",
+      "provenance": "authored",
+      "expectedRows": 45,
+      "expectedIntentCounts": {
+        "SEARCH_ITEM": 5,
+        "ADD_ITEM": 5,
+        "UPDATE_ITEM": 5,
+        "DELETE_ITEM": 5,
+        "MANAGE_BOX": 5,
+        "VIEW_INVENTORY": 5,
+        "UPLOAD_PHOTO": 5,
+        "GENERAL_HELP": 5,
+        "UNCLEAR": 5
+      }
+    },
+    {
+      "path": "needle-training-seed.json",
+      "kind": "training-source",
+      "provenance": "authored",
+      "expectedRows": 167,
+      "expectedIntentCounts": {
+        "SEARCH_ITEM": 18,
+        "ADD_ITEM": 12,
+        "UPDATE_ITEM": 27,
+        "DELETE_ITEM": 12,
+        "MANAGE_BOX": 21,
+        "VIEW_INVENTORY": 20,
+        "UPLOAD_PHOTO": 14,
+        "GENERAL_HELP": 13,
+        "UNCLEAR": 30
+      }
+    },
+    {
+      "path": "needle-training-seed.300.json",
+      "kind": "training-source-expanded",
+      "provenance": "generated",
+      "input": "needle-training-seed.json",
+      "expectedRows": 345,
+      "expectedIntentCounts": {
+        "SEARCH_ITEM": 40,
+        "ADD_ITEM": 30,
+        "UPDATE_ITEM": 53,
+        "DELETE_ITEM": 30,
+        "MANAGE_BOX": 44,
+        "VIEW_INVENTORY": 43,
+        "UPLOAD_PHOTO": 32,
+        "GENERAL_HELP": 27,
+        "UNCLEAR": 46
+      }
+    },
+    {
+      "path": "training_set.seed.jsonl",
+      "kind": "training-jsonl",
+      "provenance": "generated",
+      "input": "needle-training-seed.json",
+      "expectedRows": 167
+    },
+    {
+      "path": "training_set.seed.summary.json",
+      "kind": "training-summary",
+      "provenance": "generated",
+      "input": "training_set.seed.jsonl",
+      "expectedRows": 167
+    },
+    {
+      "path": "training_set.300.jsonl",
+      "kind": "training-jsonl",
+      "provenance": "generated",
+      "input": "needle-training-seed.300.json",
+      "expectedRows": 345
+    },
+    {
+      "path": "training_set.300.summary.json",
+      "kind": "training-summary",
+      "provenance": "generated",
+      "input": "training_set.300.jsonl",
+      "expectedRows": 345
+    },
+    {
+      "path": "training_set.300.oversample_unclear.jsonl",
+      "kind": "training-jsonl-oversampled",
+      "provenance": "generated",
+      "input": "training_set.300.jsonl",
+      "expectedRows": 391
+    }
+  ],
+  "generatorContract": {
+    "expandedSeed": {
+      "command": "pwsh -NoProfile -File scripts\\generate-training-datasets.ps1",
+      "input": "needle-training-seed.json",
+      "output": "needle-training-seed.300.json",
+      "requiredRows": 345,
+      "canonicalization": "UTF-8 without BOM and LF line endings.",
+      "requires": [
+        "167 unique normalized input queries in the authored seed",
+        "fixed templates and cases",
+        "ordinal case-insensitive duplicate rejection",
+        "no random shuffle",
+        "stable expectedParameters property ordering"
+      ],
+      "postcondition": "The regenerated output must match its integrity.manifest.json SHA-256 entry."
+    },
+    "jsonlExports": {
+      "command": "dotnet run --project IntentEvalHarness -- --export-training-jsonl <source> --output <output>",
+      "canonicalization": "UTF-8 without BOM and LF line endings; normalize the .NET export when run on Windows before updating integrity checksums.",
+      "outputs": [
+        {
+          "source": "needle-training-seed.json",
+          "output": "training_set.seed.jsonl",
+          "summary": "training_set.seed.summary.json",
+          "requiredRows": 167
+        },
+        {
+          "source": "needle-training-seed.300.json",
+          "output": "training_set.300.jsonl",
+          "summary": "training_set.300.summary.json",
+          "requiredRows": 345
+        }
+      ]
+    },
+    "unclearOversample": {
+      "owner": "Automation backlog item #11",
+      "input": "training_set.300.jsonl",
+      "output": "training_set.300.oversample_unclear.jsonl",
+      "requiredRows": 391,
+      "algorithm": "Preserve the 345-row source order. Emit every source row once and emit a second adjacent byte-identical row only when answers is empty (the 46 UNCLEAR examples).",
+      "postcondition": "The regenerated output must match its integrity.manifest.json SHA-256 entry.",
+      "mustNot": [
+        "shuffle records",
+        "duplicate a non-UNCLEAR record",
+        "use the held-out evaluation dataset"
+      ]
+    }
+  },
+  "frozenBaseline": {
+    "path": "../Baselines/openAi_frozen_20260823_full45",
+    "provenance": "byte-preserved-immutable",
+    "requiredFiles": [
+      "README.md",
+      "manifest.json",
+      "needle_diagnostics.json",
+      "results.csv",
+      "summary.json"
+    ],
+    "expectedCases": 45,
+    "providerKey": "openAi"
+  }
+}

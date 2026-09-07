@@ -1,0 +1,5 @@
+# Official PyPI wheel for cactus-needle 2.0.10.
+# Source: https://pypi.org/pypi/cactus-needle/2.0.10/json
+# This hash is verified by bootstrap-wsl.sh before the package is installed.
+cactus-needle==2.0.10 \
+    --hash=sha256:f263b8e74fde5e225bb19a1c2747a3c2164272e27f1a7b948ecea3f3e1d925d9
