@@ -13,6 +13,7 @@ public sealed class NeedleWeightArtifact
     public string? Sha256 { get; init; }
     public bool FileExists { get; init; }
     public long? FileSizeBytes { get; init; }
+    public string EngineVersion { get; init; } = "2.0.10";
 }
 
 public sealed class NeedleWeightRegistry
@@ -29,15 +30,17 @@ public sealed class NeedleWeightRegistry
         _configuration = configuration;
     }
 
-    public NeedleWeightArtifact? GetPreferredTunedArtifact()
+    public NeedleWeightArtifact? GetPreferredTunedArtifact(string engineVersion = "2.0.10")
     {
-        var configuredArtifact = TryGetConfiguredArtifact();
+        var configuredArtifact = TryGetConfiguredArtifact(engineVersion);
         if (configuredArtifact is not null)
         {
             return configuredArtifact;
         }
 
-        return DiscoverManifestArtifacts().LastOrDefault();
+        return DiscoverManifestArtifacts()
+            .Where(artifact => string.Equals(artifact.EngineVersion, engineVersion, StringComparison.OrdinalIgnoreCase))
+            .LastOrDefault();
     }
 
     public string Describe(NeedleWeightArtifact artifact)
@@ -68,17 +71,18 @@ public sealed class NeedleWeightRegistry
         }
     }
 
-    private NeedleWeightArtifact? TryGetConfiguredArtifact()
+    private NeedleWeightArtifact? TryGetConfiguredArtifact(string engineVersion)
     {
-        var configuredPath = _configuration["Needle:TunedWeightsPath"];
+        var keyPrefix = string.Equals(engineVersion, "3.0.2", StringComparison.OrdinalIgnoreCase) ? "Needle:V3Tuned" : "Needle:Tuned";
+        var configuredPath = _configuration[$"{keyPrefix}WeightsPath"];
         if (string.IsNullOrWhiteSpace(configuredPath))
         {
             return null;
         }
 
         var resolvedPath = ResolveConfiguredPath(configuredPath);
-        var displayName = _configuration["Needle:TunedWeightsDisplayName"];
-        var key = _configuration["Needle:TunedProviderKey"];
+        var displayName = _configuration[$"{keyPrefix}WeightsDisplayName"];
+        var key = _configuration[$"{keyPrefix}ProviderKey"];
         var fileExists = File.Exists(resolvedPath);
 
         return new NeedleWeightArtifact
@@ -86,9 +90,10 @@ public sealed class NeedleWeightRegistry
             ProviderKey = SanitizeProviderKey(key, Path.GetFileNameWithoutExtension(resolvedPath)),
             DisplayName = string.IsNullOrWhiteSpace(displayName) ? $"Needle Tuned ({Path.GetFileNameWithoutExtension(resolvedPath)})" : displayName,
             WeightsPath = resolvedPath,
-            Sha256 = _configuration["Needle:TunedWeightsSha256"],
+            Sha256 = _configuration[$"{keyPrefix}WeightsSha256"],
             FileExists = fileExists,
-            FileSizeBytes = fileExists ? new FileInfo(resolvedPath).Length : null
+            FileSizeBytes = fileExists ? new FileInfo(resolvedPath).Length : null,
+            EngineVersion = engineVersion
         };
     }
 
@@ -130,6 +135,7 @@ public sealed class NeedleWeightRegistry
             }
 
             var directoryName = Path.GetFileName(Path.GetDirectoryName(manifestPath)) ?? "Tuned";
+            var engineVersion = string.IsNullOrWhiteSpace(manifest.EngineVersion) ? "2.0.10" : manifest.EngineVersion;
 
             artifacts.Add(new NeedleWeightArtifact
             {
@@ -139,7 +145,8 @@ public sealed class NeedleWeightRegistry
                 ManifestPath = manifestPath,
                 Sha256 = manifest.Sha256,
                 FileExists = fileExists,
-                FileSizeBytes = fileExists ? new FileInfo(resolvedWeightsPath).Length : null
+                FileSizeBytes = fileExists ? new FileInfo(resolvedWeightsPath).Length : null,
+                EngineVersion = engineVersion
             });
         }
 
@@ -211,5 +218,6 @@ public sealed class NeedleWeightRegistry
         public string? WeightsFile { get; set; }
         public string? WeightsPath { get; set; }
         public string? Sha256 { get; set; }
+        public string? EngineVersion { get; set; }
     }
 }

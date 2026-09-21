@@ -54,7 +54,8 @@ public sealed class EvalProvider
         bool enabled,
         Func<IntentEvalCase, Task<ProviderOutcome>> evaluateAsync,
         Func<Task>? initializeAsync = null,
-        Action? disposeAction = null)
+        Action? disposeAction = null,
+        string? engineFamily = null)
     {
         Key = key;
         DisplayName = displayName;
@@ -62,6 +63,7 @@ public sealed class EvalProvider
         EvaluateAsync = evaluateAsync;
         InitializeAsync = initializeAsync;
         DisposeAction = disposeAction;
+        EngineFamily = engineFamily;
     }
 
     public string Key { get; }
@@ -70,6 +72,7 @@ public sealed class EvalProvider
     public Func<IntentEvalCase, Task<ProviderOutcome>> EvaluateAsync { get; }
     public Func<Task>? InitializeAsync { get; }
     public Action? DisposeAction { get; }
+    public string? EngineFamily { get; }
 }
 
 public sealed class EvalRow
@@ -410,7 +413,7 @@ public static class Program
         NeedleIntentClient? baseNeedleClient = null;
 
         NeedleIntentClient? tunedNeedleClient = null;
-        var tunedArtifact = weightRegistry.GetPreferredTunedArtifact();
+        var tunedArtifact = weightRegistry.GetPreferredTunedArtifact("2.0.10");
 
         var providers = new List<EvalProvider>
         {
@@ -433,7 +436,8 @@ public static class Program
                 {
                     baseNeedleClient?.Dispose();
                     baseNeedleClient = null;
-                })
+                },
+                engineFamily: "needle2")
         };
 
         if (tunedArtifact is not null)
@@ -455,7 +459,8 @@ public static class Program
                     {
                         tunedNeedleClient?.Dispose();
                         tunedNeedleClient = null;
-                    }));
+                    },
+                    engineFamily: "needle2"));
         }
 
         NeedleIntentClient? v3NeedleClient = null;
@@ -477,7 +482,34 @@ public static class Program
                     {
                         v3NeedleClient?.Dispose();
                         v3NeedleClient = null;
-                    }));
+                    },
+                    engineFamily: "needle3"));
+        }
+
+        NeedleIntentClient? v3TunedNeedleClient = null;
+        var v3TunedArtifact = weightRegistry.GetPreferredTunedArtifact("3.0.2");
+        if (v3TunedArtifact is not null)
+        {
+            providers.Add(
+                new EvalProvider(
+                    key: v3TunedArtifact.ProviderKey,
+                    displayName: v3TunedArtifact.DisplayName,
+                    enabled: true,
+                    evaluateAsync: testCase => Task.FromResult(EvaluateNeedle(v3TunedNeedleClient, testCase, v3TunedArtifact.ProviderKey)),
+                    initializeAsync: () =>
+                    {
+                        weightRegistry.Validate(v3TunedArtifact);
+                        Console.WriteLine($"Activating tuned Needle3 weights: {weightRegistry.Describe(v3TunedArtifact)}");
+                        Console.WriteLine("WARNING: Locally fine-tuned Needle3 archives do not include a trained confidence head; ReportedConfidence will be null unless produced via the Cactus hosted platform.");
+                        v3TunedNeedleClient = TryCreateNeedleV3Client(repositoryRoot, configuration, v3TunedArtifact);
+                        return Task.CompletedTask;
+                    },
+                    disposeAction: () =>
+                    {
+                        v3TunedNeedleClient?.Dispose();
+                        v3TunedNeedleClient = null;
+                    },
+                    engineFamily: "needle3"));
         }
 
         return providers;
@@ -517,7 +549,8 @@ public static class Program
             WeightsPath = resolvedPath,
             Sha256 = configuration["Needle:V3WeightsSha256"],
             FileExists = fileExists,
-            FileSizeBytes = fileExists ? new FileInfo(resolvedPath).Length : null
+            FileSizeBytes = fileExists ? new FileInfo(resolvedPath).Length : null,
+            EngineVersion = "3.0.2"
         };
     }
 
@@ -999,15 +1032,15 @@ public static class Program
                 "For OpenAI, set OpenAI:Enabled=true, OpenAI:AllowLiveCalls=true, and OpenAI:ApiKey.");
         }
 
-        var selectedNeedleKeys = selected
-            .Select(provider => provider.Key)
-            .Where(key => key.StartsWith("needle", StringComparison.OrdinalIgnoreCase))
+        var selectedEngineFamilies = selected
+            .Select(provider => provider.EngineFamily)
+            .Where(family => !string.IsNullOrEmpty(family))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
-        if (selectedNeedleKeys.Any(key => string.Equals(key, "needleV3", StringComparison.OrdinalIgnoreCase)) &&
-            selectedNeedleKeys.Any(key => !string.Equals(key, "needleV3", StringComparison.OrdinalIgnoreCase)))
+        if (selectedEngineFamilies.Count > 1)
         {
             throw new ArgumentException(
-                "needleV3 (Needle3 engine) cannot be selected together with needleBase or a tuned Needle2 key in one run. " +
+                $"Providers from multiple Needle engine families cannot be selected together in one run ({string.Join(", ", selectedEngineFamilies)}). " +
                 "The Needle2 and Needle3 native engines cannot be loaded in the same process; run them in separate invocations.");
         }
 
@@ -1097,8 +1130,8 @@ public static class Program
         Console.WriteLine("  dotnet run --project IntentEvalHarness -- --providers needleV3");
         Console.WriteLine("  dotnet run --project IntentEvalHarness -- --export-training-jsonl Dataset/needle-training-seed.json --output Dataset/training_set.seed.jsonl");
         Console.WriteLine("Provider keys:");
-        Console.WriteLine("  openAi, needleBase, needleV3, and any discovered tuned Needle2 key such as needleMyTunedRun");
-        Console.WriteLine("  needleV3 (Needle3 engine) cannot be selected together with needleBase or a tuned Needle2 key in one run: the native engines are mutually exclusive within one process.");
+        Console.WriteLine("  openAi, needleBase, needleV3, and any discovered tuned Needle2 or Needle3 key such as needleMyTunedRun");
+        Console.WriteLine("  needleV3 and a tuned Needle3 key can be combined; neither can be combined with needleBase or a tuned Needle2 key in one run: the native engines are mutually exclusive within one process.");
     }
 
     private static OpenAiIntentEvaluator? TryCreateOpenAiService(IConfiguration configuration, ILoggerFactory loggerFactory)

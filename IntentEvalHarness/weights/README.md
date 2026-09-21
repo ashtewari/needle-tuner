@@ -35,9 +35,9 @@ up by the tuned-artifact manifest auto-discovery described above. Configure its
 location with `Needle:V3WeightsPath` (default `weights/base-v3/needle3.cact`),
 `Needle:V3WeightsDisplayName`, and optionally `Needle:V3WeightsSha256` in
 `appsettings.json`. `needleV3` cannot be selected together with `needleBase` or
-a tuned Needle2 key in the same `--providers` run; see
-[`../native/README.md`](../native/README.md) for why the native engines are
-mutually exclusive.
+a tuned Needle2 key in the same `--providers` run, but can be combined with a
+tuned Needle3 key; see [`../native/README.md`](../native/README.md) for why the
+native engines are mutually exclusive across families.
 
 Weights, checkpoints, and adapters are generated locally and are not committed.
 Record completed runs in the canonical append-only

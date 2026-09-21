@@ -3,8 +3,10 @@
 Standalone training and evaluation tooling for Needle structured intent
 extraction. The repository contains the .NET harness, authored and generated
 dataset contracts, cross-platform native loading, pinned setup scripts, and
-explicitly gated fine-tuning wrappers. Needle2 is the fine-tuning target;
-Needle3 is supported for base-model evaluation only.
+explicitly gated fine-tuning wrappers. Needle2 and Needle3 are both supported
+for evaluation and fine-tuning; the two native engines are mutually
+incompatible and cannot be loaded in the same process, so each gets its own
+pinned environment, native directory, and invocation.
 
 Generated weights, checkpoints, adapters, native binaries, Python environments,
 loss plots, and runtime reports are local-only. Recreate them; do not commit or
@@ -109,14 +111,14 @@ The script accepts `--repository` and `--filename` to target a different
 official artifact, and `scripts/prepare-needle-base-checkpoint.ps1` is the
 equivalent Windows entry point.
 
-### Needle3 engine (evaluation only)
+### Needle3 engine (evaluation and fine-tuning)
 
 Needle3 uses a different, mutually incompatible native engine, so it gets its
 own pinned environment and a version-suffixed native directory. Pass the
 pinned engine version to both setup steps:
 
 ```bash
-bash scripts/bootstrap-wsl.sh --engine-version 3.0.2
+bash scripts/bootstrap-wsl.sh --engine-version 3.0.2 --cuda
 bash scripts/acquire-needle-native.sh --engine-version 3.0.2
 bash scripts/prepare-needle-base-checkpoint.sh --download \
   --repository Cactus-Compute/needle3 --filename needle3.cact \
@@ -127,10 +129,31 @@ bash scripts/prepare-needle-base-checkpoint.sh --download \
 That creates `.venv-needle-3.0.2/` and
 `IntentEvalHarness/native/<rid>/3.0.2/libneedle.so`, leaving the default
 Needle2 environment and engine untouched. The checkpoint download is about
-35 MB and is verified against its published LFS SHA-256. The 3.0.2 path is
-inference-only: it installs no JAX/Flax/Optax training stack and rejects
-`--cuda`. The Windows equivalents are `-EngineVersion 3.0.2` on
-`scripts/bootstrap-needle.ps1` and `scripts/acquire-needle-native.ps1`.
+35 MB and is verified against its published LFS SHA-256. Needle3 installs the
+same pinned JAX/Flax/Optax fine-tuning stack as Needle2 (plus `safetensors`
+for its native checkpoint format, see
+[`scripts/requirements-needle-v3.txt`](scripts/requirements-needle-v3.txt))
+and supports `--cuda` identically. The Windows equivalents are
+`-EngineVersion 3.0.2` on `scripts/bootstrap-needle.ps1` and
+`scripts/acquire-needle-native.ps1`.
+
+Fine-tuning Needle3 requires its own base checkpoint, a different file from
+the `.cact` evaluation archive above: the Hugging Face
+`checkpoints/needle3.safetensors` artifact in `Cactus-Compute/needle3`.
+Fetch it into the fine-tune-specific location:
+
+```bash
+bash scripts/prepare-needle-base-checkpoint.sh --download \
+  --repository Cactus-Compute/needle3 --filename checkpoints/needle3.safetensors \
+  --output IntentEvalHarness/weights/base-v3/finetune/needle3.safetensors \
+  --python-bin .venv-needle-3.0.2/bin/python
+```
+
+**Confidence caveat:** locally fine-tuned Needle3 archives do not include a
+trained confidence head. `ReportedConfidence` is `null` for a locally-tuned
+artifact unless it was produced through the paid, hosted Cactus platform,
+which calibrates the confidence head separately. The fine-tune wrappers print
+a warning to this effect after every Needle3 run.
 
 ## Dataset generation and JSONL export
 
@@ -186,9 +209,11 @@ dotnet run --project IntentEvalHarness -- --providers needleV3
 ```
 
 The Needle2 and Needle3 native engines cannot be loaded in the same process,
-so the harness rejects a `--providers` selection that combines `needleV3` with
-`needleBase` or a tuned Needle2 key. Run each engine separately and compare
-the resulting `summary.json` reports offline.
+so the harness rejects a `--providers` selection that mixes providers from
+both engine families in one run (for example `needleV3` with `needleBase` or a
+tuned Needle2 key). Providers within the same engine family can be combined
+(for example `needleV3` with a tuned Needle3 key). Run different engine
+families separately and compare the resulting `summary.json` reports offline.
 
 ## Smoke training and explicit full training
 
@@ -240,6 +265,31 @@ promote, deploy, or execute actions from a tuned artifact. A release candidate
 needs human review, per-intent and fallback analysis, and a separately created
 unseen test set.
 
+### Fine-tuning Needle3
+
+Once the Needle3 fine-tune base checkpoint is prepared (see above), pass
+`--engine-version 3.0.2` to the same wrapper:
+
+```bash
+run_name="$(date -u +%Y%m%d_%H%M%S)"
+bash scripts/needle-finetune.sh --engine-version 3.0.2 --run-name "$run_name" \
+  --dataset-path IntentEvalHarness/Dataset/training_set.300.jsonl \
+  --epochs 30 --lora-rank 16 --lora-alpha 32 --learning-rate 0.0001 \
+  --batch-size 4 --max-len 1024 --val-split 0.1
+```
+
+On Windows, use `-EngineVersion 3.0.2` with
+`scripts/needle-finetune.ps1`. Each run creates the same local
+`weights/<run-name>/` layout as Needle2 (manifest, adapter, checkpoint copy,
+`.cact` artifact, log, loss plot); the manifest additionally records
+`engineVersion`. Select the resulting tuned artifact with the
+`Needle__V3TunedWeightsPath` / `Needle__V3TunedProviderKey` /
+`Needle__V3TunedWeightsDisplayName` / `Needle__V3TunedWeightsSha256`
+environment variables (the `V3Tuned`-prefixed counterparts of the Needle2
+`Tuned*` variables used above), then evaluate with `--providers needleV3` or
+the discovered tuned-Needle3 provider key. Remember: `ReportedConfidence` will
+be `null` for this locally-tuned artifact.
+
 ## Troubleshooting
 
 - `pwsh` missing: install PowerShell 7 before running the generator.
@@ -249,8 +299,12 @@ unseen test set.
   pinned environment; do not copy a binary from another machine.
 - `needleV3` skipped with a warning: acquire the 3.0.2 engine and Needle3
   checkpoint first; the provider fails open so the rest of the run continues.
-- `needleV3` rejected at startup: it cannot share a process with `needleBase`
-  or a tuned Needle2 key. Run it in its own invocation.
+- `needleV3` rejected at startup: it cannot share a process with a provider
+  from a different Needle engine family (`needleBase` or a tuned Needle2 key).
+  Run it in its own invocation, optionally combined with a tuned Needle3 key.
+- Locally fine-tuned Needle3 result shows `ReportedConfidence: null`: expected
+  for local/CLI fine-tuning, which does not train the confidence head; only
+  the paid hosted Cactus platform calibrates it.
 - `nvidia-smi` unavailable or JAX backend is not `gpu`: training is blocked.
   Repair WSL GPU visibility and rerun `bootstrap-wsl.sh --cuda`.
 - Base checkpoint missing or unverified: run

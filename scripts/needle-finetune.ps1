@@ -2,6 +2,8 @@
 param(
     [string]$DatasetPath = 'IntentEvalHarness/Dataset/training_set.300.jsonl',
     [string]$RunName = '',
+    [ValidateSet('2.0.10', '3.0.2')]
+    [string]$EngineVersion = '2.0.10',
     [int]$Epochs = 30,
     [int]$LoraRank = 16,
     [int]$LoraAlpha = 32,
@@ -9,8 +11,9 @@ param(
     [int]$BatchSize = 4,
     [int]$MaxLen = 1024,
     [double]$ValSplit = 0.1,
-    [string]$BaseCheckpoint = 'IntentEvalHarness/weights/base/needle2.pkl',
+    [string]$BaseCheckpoint = '',
     [string]$NativeLibrary = '',
+    [Nullable[int]]$Layers = $null,
     [string]$PythonBin = '',
     [string]$NeedleBin = '',
     [switch]$SmokeTest,
@@ -20,6 +23,10 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+if ($Layers -and $EngineVersion -ne '3.0.2') {
+    throw '-Layers is only supported with -EngineVersion 3.0.2.'
+}
 
 function Resolve-RepositoryPath {
     param([string]$BasePath, [string]$PathValue)
@@ -38,17 +45,31 @@ $runningOnWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPla
 $architecture = [System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture
 $architectureSuffix = if ($architecture -eq [System.Runtime.InteropServices.Architecture]::Arm64) { 'arm64' } elseif ($architecture -eq [System.Runtime.InteropServices.Architecture]::X64) { 'x64' } else { throw "Unsupported processor architecture: $architecture" }
 $rid = if ($runningOnWindows) { "win-$architectureSuffix" } else { "linux-$architectureSuffix" }
-$venvRoot = Join-Path $repoRoot '.venv-needle'
+$libraryName = if ($runningOnWindows) { 'libneedle.dll' } else { 'libneedle.so' }
+if ($EngineVersion -eq '3.0.2') {
+    $venvRoot = Join-Path $repoRoot '.venv-needle-3.0.2'
+    $nativeSubdir = Join-Path $projectRoot "native/$rid/3.0.2/$libraryName"
+    $baseCheckpointDefault = 'IntentEvalHarness/weights/base-v3/finetune/needle3.safetensors'
+    $runBaseCheckpointName = 'needle3.safetensors'
+    $adapterFileName = 'needle_lora.safetensors'
+}
+else {
+    $venvRoot = Join-Path $repoRoot '.venv-needle'
+    $nativeSubdir = Join-Path $projectRoot "native/$rid/$libraryName"
+    $baseCheckpointDefault = 'IntentEvalHarness/weights/base/needle2.pkl'
+    $runBaseCheckpointName = 'needle2.pkl'
+    $adapterFileName = 'needle_lora.pkl'
+}
+if ([string]::IsNullOrWhiteSpace($BaseCheckpoint)) { $BaseCheckpoint = $baseCheckpointDefault }
 $defaultPython = if ($runningOnWindows) { Join-Path $venvRoot 'Scripts/python.exe' } else { Join-Path $venvRoot 'bin/python' }
 $defaultNeedle = if ($runningOnWindows) { Join-Path $venvRoot 'Scripts/needle.exe' } else { Join-Path $venvRoot 'bin/needle' }
-$libraryName = if ($runningOnWindows) { 'libneedle.dll' } else { 'libneedle.so' }
 
 $datasetFullPath = Resolve-RepositoryPath $repoRoot $DatasetPath
 $baseCheckpointPath = Resolve-RepositoryPath $repoRoot $BaseCheckpoint
 $baseManifestPath = Join-Path (Split-Path -Parent $baseCheckpointPath) 'base-checkpoint.manifest.json'
 $PythonBin = if ([string]::IsNullOrWhiteSpace($PythonBin)) { $defaultPython } else { Resolve-RepositoryPath $repoRoot $PythonBin }
 $NeedleBin = if ([string]::IsNullOrWhiteSpace($NeedleBin)) { $defaultNeedle } else { Resolve-RepositoryPath $repoRoot $NeedleBin }
-$NativeLibrary = if ([string]::IsNullOrWhiteSpace($NativeLibrary)) { Join-Path $projectRoot "native/$rid/$libraryName" } else { Resolve-RepositoryPath $repoRoot $NativeLibrary }
+$NativeLibrary = if ([string]::IsNullOrWhiteSpace($NativeLibrary)) { $nativeSubdir } else { Resolve-RepositoryPath $repoRoot $NativeLibrary }
 $lossPlotScript = Join-Path $PSScriptRoot 'needle-loss-plot.py'
 
 if ($SmokeTest) {
@@ -62,8 +83,8 @@ if ($RunName -notmatch '^[A-Za-z0-9._-]+$') { throw '-RunName may contain only l
 
 $runRoot = Join-Path $projectRoot "weights/$RunName"
 $checkpointsRoot = Join-Path $runRoot 'checkpoints'
-$adapterPath = Join-Path $checkpointsRoot 'needle_lora.pkl'
-$runBaseCheckpoint = Join-Path $checkpointsRoot 'needle2.pkl'
+$adapterPath = Join-Path $checkpointsRoot $adapterFileName
+$runBaseCheckpoint = Join-Path $checkpointsRoot $runBaseCheckpointName
 $artifactFileName = 'needle_tuned.cact'
 $artifactPath = Join-Path $runRoot $artifactFileName
 $manifestPath = Join-Path $runRoot 'manifest.json'
@@ -72,6 +93,7 @@ $lossPlotPath = Join-Path $runRoot 'loss_curve.svg'
 
 if ($DryRun) {
     Write-Host "Mode: $(if ($SmokeTest) { 'smoke-test' } else { 'quality-run' })"
+    Write-Host "Engine version: $EngineVersion"
     Write-Host "Dataset: $datasetFullPath"
     Write-Host "Base checkpoint: $baseCheckpointPath"
     Write-Host "Native library: $NativeLibrary"
@@ -115,8 +137,11 @@ if ([System.IO.Path]::GetFullPath($baseCheckpointPath) -ne [System.IO.Path]::Get
 $env:XLA_PYTHON_CLIENT_PREALLOCATE = if ($env:XLA_PYTHON_CLIENT_PREALLOCATE) { $env:XLA_PYTHON_CLIENT_PREALLOCATE } else { 'false' }
 $learningRateText = $LearningRate.ToString([System.Globalization.CultureInfo]::InvariantCulture)
 $valSplitText = $ValSplit.ToString([System.Globalization.CultureInfo]::InvariantCulture)
-$finetuneArgs = @($needlePrefix + @('finetune', $datasetFullPath, '--epochs', $Epochs, '--lora-rank', $LoraRank, '--lora-alpha', $LoraAlpha, '--lr', $learningRateText, '--batch-size', $BatchSize, '--max-len', $MaxLen, '--val-split', $valSplitText, '--out', 'checkpoints/needle_lora.pkl'))
-$buildArgs = @($needlePrefix + @('build', 'checkpoints/needle2.pkl', '--lora', 'checkpoints/needle_lora.pkl', '--out', $artifactFileName))
+$finetuneArgs = @($needlePrefix + @('finetune', $datasetFullPath, '--epochs', $Epochs, '--lora-rank', $LoraRank, '--lora-alpha', $LoraAlpha, '--lr', $learningRateText, '--batch-size', $BatchSize, '--max-len', $MaxLen, '--val-split', $valSplitText, '--out', "checkpoints/$adapterFileName"))
+$buildArgs = @($needlePrefix + @('build', "checkpoints/$runBaseCheckpointName", '--lora', "checkpoints/$adapterFileName", '--out', $artifactFileName))
+if ($Layers) {
+    $buildArgs += @('--layers', $Layers)
+}
 
 Push-Location $runRoot
 try {
@@ -138,13 +163,17 @@ $manifest = [ordered]@{
     displayName = "Needle Tuned ($RunName)"
     weightsFile = $artifactFileName
     sha256 = (Get-FileHash -LiteralPath $artifactPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    engineVersion = $EngineVersion
     createdUtc = (Get-Date).ToUniversalTime().ToString('o')
     datasetPath = Get-RepositoryRelativePath $repoRoot $datasetFullPath
     baseCheckpointPath = Get-RepositoryRelativePath $repoRoot $baseCheckpointPath
     adapterPath = Get-RepositoryRelativePath $repoRoot $adapterPath
-    command = [ordered]@{ script = 'scripts/needle-finetune.ps1'; runName = $RunName; epochs = $Epochs; loraRank = $LoraRank; loraAlpha = $LoraAlpha; learningRate = $LearningRate; batchSize = $BatchSize; maxLen = $MaxLen; valSplit = $ValSplit; smokeTest = [bool]$SmokeTest }
+    command = [ordered]@{ script = 'scripts/needle-finetune.ps1'; runName = $RunName; engineVersion = $EngineVersion; epochs = $Epochs; loraRank = $LoraRank; loraAlpha = $LoraAlpha; learningRate = $LearningRate; batchSize = $BatchSize; maxLen = $MaxLen; valSplit = $ValSplit; smokeTest = [bool]$SmokeTest }
 }
 $manifest | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $manifestPath -Encoding utf8
+if ($EngineVersion -eq '3.0.2') {
+    Write-Warning 'Locally fine-tuned Needle3 archives do not include a trained confidence head; ReportedConfidence will be null unless produced via the Cactus hosted platform.'
+}
 Write-Host "Tuned artifact: $(Get-RepositoryRelativePath $repoRoot $artifactPath)"
 Write-Host "Manifest: $(Get-RepositoryRelativePath $repoRoot $manifestPath)"
 Write-Host "Provider key: $($manifest.providerKey)"

@@ -125,6 +125,60 @@ public sealed class WeightRegistryTests
         Directory.Delete(workDir, recursive: true);
     }
 
+    [Fact]
+    public void GetPreferredTunedArtifact_IsEngineVersionAware()
+    {
+        var workDir = CreateWorkDir("weights-engine-version");
+        var v2Dir = Path.Combine(workDir, "weights", "runV2");
+        var v3Dir = Path.Combine(workDir, "weights", "runV3");
+        Directory.CreateDirectory(v2Dir);
+        Directory.CreateDirectory(v3Dir);
+
+        var v2WeightsPath = Path.Combine(v2Dir, "needle_tuned.cact");
+        File.WriteAllBytes(v2WeightsPath, [1, 2, 3]);
+        var v2Hash = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(v2WeightsPath)));
+        File.WriteAllText(
+            Path.Combine(v2Dir, "manifest.json"),
+            $$"""
+            {
+              "providerKey": "needleRunV2",
+              "displayName": "Needle Tuned Run V2",
+              "weightsFile": "needle_tuned.cact",
+              "sha256": "{{v2Hash}}"
+            }
+            """);
+
+        var v3WeightsPath = Path.Combine(v3Dir, "needle_tuned.cact");
+        File.WriteAllBytes(v3WeightsPath, [4, 5, 6]);
+        var v3Hash = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(v3WeightsPath)));
+        File.WriteAllText(
+            Path.Combine(v3Dir, "manifest.json"),
+            $$"""
+            {
+              "providerKey": "needleRunV3",
+              "displayName": "Needle Tuned Run V3",
+              "weightsFile": "needle_tuned.cact",
+              "sha256": "{{v3Hash}}",
+              "engineVersion": "3.0.2"
+            }
+            """);
+
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>())
+            .Build();
+        var registry = new NeedleWeightRegistry(workDir, config);
+
+        var v2Artifact = registry.GetPreferredTunedArtifact("2.0.10");
+        var v3Artifact = registry.GetPreferredTunedArtifact("3.0.2");
+
+        Assert.NotNull(v2Artifact);
+        Assert.Equal("needleRunV2", v2Artifact!.ProviderKey);
+        Assert.NotNull(v3Artifact);
+        Assert.Equal("needleRunV3", v3Artifact!.ProviderKey);
+
+        Directory.Delete(workDir, recursive: true);
+    }
+
     private static string CreateWorkDir(string prefix)
     {
         var projectRoot = HarnessPathUtils.GetProjectRoot(AppContext.BaseDirectory);

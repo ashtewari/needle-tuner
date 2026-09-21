@@ -1,5 +1,13 @@
-# Needle3 evaluation is inference-only: no JAX/flax/optax training stack is
-# needed, unlike requirements-needle.txt (Needle2 fine-tuning). Do not use the
-# unsupported cactus-needle "train" extra.
-# Required at runtime by cactus-needle; pin so pip check succeeds.
+# Needle3 fine-tuning and evaluation use the same pinned JAX/Flax/Optax stack
+# as Needle2 (requirements-needle.txt); verified compatible with
+# cactus-needle 3.0.2 in a clean venv (pip check passes, imports succeed).
+# safetensors is additionally required for Needle3's native checkpoint format.
+# Do not use the unsupported cactus-needle "train" extra (unpinned versions).
+jax==0.11.1
+jaxlib==0.11.1
+flax==0.12.9
+optax==0.2.8
+safetensors==0.8.0
+# Required at runtime by cactus-needle; pin direct dependencies so pip check succeeds.
 huggingface-hub==1.30.0
+sentencepiece==0.2.2

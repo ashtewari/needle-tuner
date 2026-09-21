@@ -12,10 +12,9 @@ Creates a Python 3.12 virtual environment and installs the pinned Needle stack.
 --cuda installs the pinned JAX CUDA 12 extra only after confirming that WSL can
 see an NVIDIA GPU. It never installs or changes a host/WSL GPU driver.
 --engine-version selects the pinned cactus-needle release: 2.0.10 (Needle2,
-default, includes the JAX/flax/optax fine-tuning stack) or 3.0.2 (Needle3,
-inference-only in this repo; skips the training stack and --cuda). Non-default
-versions default to a version-suffixed venv (.venv-needle-<version>) so both
-can coexist locally.
+default) or 3.0.2 (Needle3). Both include the full JAX/flax/optax fine-tuning
+stack and support --cuda. Non-default versions default to a version-suffixed
+venv (.venv-needle-<version>) so both can coexist locally.
 --prepare-base-checkpoint explicitly downloads and verifies the official ~90 MB
 Needle2 base checkpoint after environment setup.
 EOF
@@ -54,8 +53,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Pinned wheel provenance per supported engine version; never accept an
-# arbitrary caller-supplied URL/hash pair here. 3.0.2 (Needle3) is
-# inference-only in this repo, so it skips the JAX/flax/optax training stack.
+# arbitrary caller-supplied URL/hash pair here. Both 2.0.10 (Needle2) and
+# 3.0.2 (Needle3) install the full JAX/flax/optax training stack.
 case "$engine_version" in
     2.0.10)
         cactus_wheel_url="https://files.pythonhosted.org/packages/24/ac/84d720ba744e79f3fa5483f0ea6b71f14d329fae3623dd0f74236f19c938/cactus_needle-2.0.10-py3-none-any.whl"
@@ -73,21 +72,17 @@ case "$engine_version" in
         die "Unsupported --engine-version '$engine_version'. Supported versions: 2.0.10, 3.0.2."
         ;;
 esac
-is_inference_only=0
-[[ "$engine_version" == "$CACTUS_VERSION_DEFAULT" ]] || is_inference_only=1
-
-if [[ $cuda -eq 1 && $is_inference_only -eq 1 ]]; then
-    die "--cuda is only supported with the default engine version ($CACTUS_VERSION_DEFAULT); $engine_version is inference-only in this repo."
-fi
+is_default_version=1
+[[ "$engine_version" == "$CACTUS_VERSION_DEFAULT" ]] || is_default_version=0
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$script_dir/.." && pwd)"
 python_bin="${PYTHON_BIN:-python3.12}"
 if [[ -z "$venv_path" ]]; then
-    if [[ $is_inference_only -eq 1 ]]; then
-        venv_path="$repo_root/.venv-needle-$engine_version"
-    else
+    if [[ $is_default_version -eq 1 ]]; then
         venv_path="$repo_root/.venv-needle"
+    else
+        venv_path="$repo_root/.venv-needle-$engine_version"
     fi
 fi
 
@@ -127,19 +122,7 @@ if [[ $cuda -eq 1 ]]; then
 fi
 
 "$venv_python" -m pip check
-if [[ $is_inference_only -eq 1 ]]; then
-    "$venv_python" - "$engine_version" <<'PY'
-import importlib.metadata as metadata
-import sys
-
-expected = {"cactus-needle": sys.argv[1]}
-actual = {name: metadata.version(name) for name in expected}
-if actual != expected:
-    raise SystemExit(f"Pin verification failed: {actual}")
-print("Pinned packages verified:", ", ".join(f"{name}={version}" for name, version in actual.items()))
-PY
-else
-    "$venv_python" - "$engine_version" <<'PY'
+"$venv_python" - "$engine_version" <<'PY'
 import importlib.metadata as metadata
 import sys
 
@@ -155,7 +138,6 @@ if actual != expected:
     raise SystemExit(f"Pin verification failed: {actual}")
 print("Pinned packages verified:", ", ".join(f"{name}={version}" for name, version in actual.items()))
 PY
-fi
 
 "$venv_python" - "$venv_path/.needle-bootstrap.json" "$engine_version" "$cactus_wheel_url" "$cactus_wheel_sha256" <<'PY'
 import json
@@ -171,14 +153,12 @@ pathlib.Path(sys.argv[1]).write_text(json.dumps({
 }, indent=2) + "\n", encoding="utf-8")
 PY
 
-if [[ $is_inference_only -eq 0 ]]; then
-    "$venv_python" - <<'PY'
+"$venv_python" - <<'PY'
 import jax
 print("JAX version:", jax.__version__)
 print("Backend:", jax.default_backend())
 print("Devices:", jax.devices())
 PY
-fi
 
 if [[ $prepare_base_checkpoint -eq 1 ]]; then
     bash "$script_dir/prepare-needle-base-checkpoint.sh" --download --python-bin "$venv_python"

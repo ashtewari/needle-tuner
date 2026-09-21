@@ -23,7 +23,8 @@ bash scripts/acquire-needle-native.sh
 ```
 
 To acquire the Needle3 engine instead, pass the pinned `3.0.2` engine version
-(inference-only; no `-Cuda`/`--cuda` or training stack):
+(it installs the same full JAX/Flax/Optax fine-tuning stack as Needle2 and
+supports `-Cuda`/`--cuda`):
 
 ```powershell
 pwsh -File scripts/bootstrap-needle.ps1 -EngineVersion 3.0.2
@@ -47,10 +48,12 @@ must be fetched locally before Needle evaluation. Without a matching binary,
 the corresponding Needle provider cannot run. OpenAI remains disabled by
 default and is not an automatic fallback.
 
-Needle2 (`needleBase`/tuned) and Needle3 (`needleV3`) cannot be loaded in the
-same process — the harness enforces this with a fail-fast CLI guard rejecting
-`--providers` selections that mix `needleV3` with any Needle2-family provider.
-Run each engine in a separate `dotnet run` invocation.
+Needle2 (`needleBase`/tuned) and Needle3 (`needleV3`/tuned) cannot be loaded in
+the same process — the harness enforces this with a fail-fast CLI guard
+rejecting `--providers` selections that mix providers from different Needle
+engine families. Providers within the same engine family (for example
+`needleV3` with a tuned Needle3 key) can be combined. Run different engine
+families in a separate `dotnet run` invocation.
 
 Native binaries are local, reproducibly acquired artifacts and are not
 committed. Their acquisition is not an experiment-log entry; record any
