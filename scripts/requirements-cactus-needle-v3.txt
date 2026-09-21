@@ -1,0 +1,5 @@
+# Official PyPI wheel for cactus-needle 3.0.2 (Needle3 engine).
+# Source: https://pypi.org/pypi/cactus-needle/3.0.2/json
+# This hash is verified by bootstrap-wsl.sh/bootstrap-needle.ps1 before install.
+cactus-needle==3.0.2 \
+    --hash=sha256:99200776c42b2af93325326f1030b49da6af3fa9d66e5d979b44f5e472e4e739

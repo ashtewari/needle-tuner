@@ -17,6 +17,8 @@ TestResults/
 *.sln.docstates
 
 # Python environments, caches, and tooling state
+.venv-*/
+**/.venv-*/
 .venv-needle/
 **/.venv-needle/
 .venv/

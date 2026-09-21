@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-readonly HF_REPOSITORY="Cactus-Compute/needle2"
-readonly HF_FILENAME="checkpoints/needle2.pkl"
+readonly HF_REPOSITORY_DEFAULT="Cactus-Compute/needle2"
+readonly HF_FILENAME_DEFAULT="checkpoints/needle2.pkl"
 
 usage() {
     cat <<'EOF'
@@ -11,16 +11,18 @@ Usage:
   bash scripts/prepare-needle-base-checkpoint.sh --download [options]
   bash scripts/prepare-needle-base-checkpoint.sh --source <path> --sha256 <hash> [options]
 
-Prepare the ignored local Needle2 base checkpoint required by the fine-tune
-wrappers. --download resolves immutable metadata from the official
-Cactus-Compute/needle2 Hugging Face repository, verifies its published LFS
-SHA-256, and records the resolved revision. --source imports a user-supplied
-file only when its expected SHA-256 is supplied and matches.
+Prepare the ignored local Needle base checkpoint required by the fine-tune
+wrappers. --download resolves immutable metadata from the official Hugging
+Face repository (Cactus-Compute/needle2 by default), verifies its published
+LFS SHA-256, and records the resolved revision. --source imports a
+user-supplied file only when its expected SHA-256 is supplied and matches.
 
 Options:
   --download                Download the official checkpoint (explicit; about 90 MB).
   --source <path>           Import a pre-acquired checkpoint.
   --sha256 <hash>           Required expected SHA-256 for --source.
+  --repository <owner/name> Hugging Face repository; default: Cactus-Compute/needle2.
+  --filename <path>         Repository-relative checkpoint path; default: checkpoints/needle2.pkl.
   --output <path>           Destination; default: IntentEvalHarness/weights/base/needle2.pkl.
   --python-bin <path>       Python with huggingface_hub; default: .venv-needle/bin/python.
   --force                   Replace an existing checkpoint after verification.
@@ -38,6 +40,8 @@ source_path=""
 expected_hash=""
 output_path=""
 python_bin=""
+hf_repository=""
+hf_filename=""
 force=0
 dry_run=0
 while [[ $# -gt 0 ]]; do
@@ -50,6 +54,8 @@ while [[ $# -gt 0 ]]; do
             [[ -z "$mode" ]] || die "Choose exactly one of --download or --source."
             mode="source"; source_path="$2"; shift 2 ;;
         --sha256) require_value "$1" "${2:-}"; expected_hash="${2,,}"; shift 2 ;;
+        --repository) require_value "$1" "${2:-}"; hf_repository="$2"; shift 2 ;;
+        --filename) require_value "$1" "${2:-}"; hf_filename="$2"; shift 2 ;;
         --output) require_value "$1" "${2:-}"; output_path="$2"; shift 2 ;;
         --python-bin) require_value "$1" "${2:-}"; python_bin="$2"; shift 2 ;;
         --force) force=1; shift ;;
@@ -58,6 +64,9 @@ while [[ $# -gt 0 ]]; do
         *) die "Unknown option '$1'. Use --help for usage." ;;
     esac
 done
+
+hf_repository="${hf_repository:-$HF_REPOSITORY_DEFAULT}"
+hf_filename="${hf_filename:-$HF_FILENAME_DEFAULT}"
 
 [[ -n "$mode" ]] || die "Choose --download or --source <path>. Use --help for usage."
 if [[ "$mode" == "source" ]]; then
@@ -78,7 +87,7 @@ python_bin="${python_bin:-$repo_root/.venv-needle/bin/python}"
 
 if [[ $dry_run -eq 1 ]]; then
     if [[ "$mode" == "download" ]]; then
-        printf 'Would download %s/%s using %s, resolve an immutable revision, verify the published LFS SHA-256, and write %s\n' "$HF_REPOSITORY" "$HF_FILENAME" "$python_bin" "$output_path"
+        printf 'Would download %s/%s using %s, resolve an immutable revision, verify the published LFS SHA-256, and write %s\n' "$hf_repository" "$hf_filename" "$python_bin" "$output_path"
     else
         printf 'Would verify and import %s to %s with SHA-256 %s\n' "$(resolve_path "$repo_root" "$source_path")" "$output_path" "$expected_hash"
     fi
@@ -127,7 +136,7 @@ if [[ "$mode" == "download" ]]; then
     metadata_path="$stage/official-metadata.json"
     downloaded=0
     for attempt in 1 2 3; do
-        if "$python_bin" - "$stage" "$metadata_path" "$HF_REPOSITORY" "$HF_FILENAME" <<'PY'
+        if "$python_bin" - "$stage" "$metadata_path" "$hf_repository" "$hf_filename" <<'PY'
 import hashlib
 import json
 import pathlib
@@ -178,10 +187,10 @@ PY
         fi
     done
     [[ $downloaded -eq 1 ]] ||
-        die "Official checkpoint acquisition failed after three attempts. Check network access to https://huggingface.co/$HF_REPOSITORY and retry."
+        die "Official checkpoint acquisition failed after three attempts. Check network access to https://huggingface.co/$hf_repository and retry."
 
-    candidate="$stage/$HF_FILENAME"
-    [[ -f "$candidate" ]] || die "Official download completed without $HF_FILENAME."
+    candidate="$stage/$hf_filename"
+    [[ -f "$candidate" ]] || die "Official download completed without $hf_filename."
     cp -- "$candidate" "$output_path"
     "$python_bin" - "$metadata_path" "$manifest_path" "$output_path" <<'PY'
 import hashlib

@@ -1,9 +1,10 @@
 # Needle
 
-Standalone training and evaluation tooling for Needle2 structured intent
+Standalone training and evaluation tooling for Needle structured intent
 extraction. The repository contains the .NET harness, authored and generated
 dataset contracts, cross-platform native loading, pinned setup scripts, and
-explicitly gated fine-tuning wrappers.
+explicitly gated fine-tuning wrappers. Needle2 is the fine-tuning target;
+Needle3 is supported for base-model evaluation only.
 
 Generated weights, checkpoints, adapters, native binaries, Python environments,
 loss plots, and runtime reports are local-only. Recreate them; do not commit or
@@ -43,7 +44,6 @@ IntentEvalHarness/
 scripts/         setup, acquisition, dataset, fine-tuning, and plot utilities
 tests/           offline .NET regression tests
 docs/experiments/  canonical append-only history and small provenance records
-docs/blog/       curated journey companion
 artifacts/       ignored local evaluation output
 ```
 
@@ -55,9 +55,11 @@ From the repository root, these commands do not train or call OpenAI:
 pwsh -NoProfile -File scripts/generate-training-datasets.ps1
 dotnet test Needle.sln --nologo
 dotnet run --project IntentEvalHarness -- --help
-bash -n scripts/bootstrap-wsl.sh scripts/acquire-needle-native.sh scripts/needle-finetune.sh
+bash -n scripts/bootstrap-wsl.sh scripts/acquire-needle-native.sh scripts/needle-finetune.sh scripts/prepare-needle-base-checkpoint.sh
 bash scripts/bootstrap-wsl.sh --help
 bash scripts/acquire-needle-native.sh --dry-run
+bash scripts/acquire-needle-native.sh --engine-version 3.0.2 --dry-run
+bash scripts/prepare-needle-base-checkpoint.sh --download --dry-run
 bash scripts/needle-finetune.sh --dry-run
 bash scripts/needle-finetune.sh --smoke-test --dry-run
 ```
@@ -103,6 +105,33 @@ require its hash instead:
 bash scripts/prepare-needle-base-checkpoint.sh --source <checkpoint-path> --sha256 <expected-sha256>
 ```
 
+The script accepts `--repository` and `--filename` to target a different
+official artifact, and `scripts/prepare-needle-base-checkpoint.ps1` is the
+equivalent Windows entry point.
+
+### Needle3 engine (evaluation only)
+
+Needle3 uses a different, mutually incompatible native engine, so it gets its
+own pinned environment and a version-suffixed native directory. Pass the
+pinned engine version to both setup steps:
+
+```bash
+bash scripts/bootstrap-wsl.sh --engine-version 3.0.2
+bash scripts/acquire-needle-native.sh --engine-version 3.0.2
+bash scripts/prepare-needle-base-checkpoint.sh --download \
+  --repository Cactus-Compute/needle3 --filename needle3.cact \
+  --output IntentEvalHarness/weights/base-v3/needle3.cact \
+  --python-bin .venv-needle-3.0.2/bin/python
+```
+
+That creates `.venv-needle-3.0.2/` and
+`IntentEvalHarness/native/<rid>/3.0.2/libneedle.so`, leaving the default
+Needle2 environment and engine untouched. The checkpoint download is about
+35 MB and is verified against its published LFS SHA-256. The 3.0.2 path is
+inference-only: it installs no JAX/Flax/Optax training stack and rejects
+`--cuda`. The Windows equivalents are `-EngineVersion 3.0.2` on
+`scripts/bootstrap-needle.ps1` and `scripts/acquire-needle-native.ps1`.
+
 ## Dataset generation and JSONL export
 
 Edit only the authored seed when a data change is justified:
@@ -147,6 +176,19 @@ not regenerate it during validation. The default configuration has
 `OpenAI:Enabled=false` and `OpenAI:AllowLiveCalls=false`. Do not enable live
 OpenAI calls or add an API key for routine checks. The frozen baseline is the
 approved evidence for comparison.
+
+The `needleV3` provider evaluates the Needle3 base checkpoint once its engine
+and weights are prepared. Point `Needle:V3WeightsPath` at the checkpoint
+(default `weights/base-v3/needle3.cact`) and run it in its own invocation:
+
+```bash
+dotnet run --project IntentEvalHarness -- --providers needleV3
+```
+
+The Needle2 and Needle3 native engines cannot be loaded in the same process,
+so the harness rejects a `--providers` selection that combines `needleV3` with
+`needleBase` or a tuned Needle2 key. Run each engine separately and compare
+the resulting `summary.json` reports offline.
 
 ## Smoke training and explicit full training
 
@@ -205,6 +247,10 @@ unseen test set.
   matching bootstrap script; do not manually mix package versions.
 - Native engine missing or hash mismatch: rerun acquisition after restoring the
   pinned environment; do not copy a binary from another machine.
+- `needleV3` skipped with a warning: acquire the 3.0.2 engine and Needle3
+  checkpoint first; the provider fails open so the rest of the run continues.
+- `needleV3` rejected at startup: it cannot share a process with `needleBase`
+  or a tuned Needle2 key. Run it in its own invocation.
 - `nvidia-smi` unavailable or JAX backend is not `gpu`: training is blocked.
   Repair WSL GPU visibility and rerun `bootstrap-wsl.sh --cuda`.
 - Base checkpoint missing or unverified: run
@@ -221,8 +267,6 @@ unseen test set.
 - [`docs/WSL-SETUP.md`](docs/WSL-SETUP.md) — clean WSL setup sequence.
 - [`docs/experiments/EXPERIMENT_LOG.md`](docs/experiments/EXPERIMENT_LOG.md) —
   append-only measured history and artifact policy.
-- [`docs/blog/needle2-journey.md`](docs/blog/needle2-journey.md) — curated
-  journey and lessons learned.
 - [`docs/RESPONSIBLE-AI.md`](docs/RESPONSIBLE-AI.md) — data, evaluation,
   safety, privacy, artifact, and third-party release constraints.
 - [`docs/experiments/provenance/20260905_lowcap/`](docs/experiments/provenance/20260905_lowcap/) —

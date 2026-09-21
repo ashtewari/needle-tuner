@@ -1,0 +1,5 @@
+# Needle3 evaluation is inference-only: no JAX/flax/optax training stack is
+# needed, unlike requirements-needle.txt (Needle2 fine-tuning). Do not use the
+# unsupported cactus-needle "train" extra.
+# Required at runtime by cactus-needle; pin so pip check succeeds.
+huggingface-hub==1.30.0

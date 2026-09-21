@@ -17,6 +17,28 @@ Select exactly one completed run by loading its `providerKey`, `displayName`,
 `weightsFile`, and `sha256` from that run's `manifest.json`; the registry
 validates the selected artifact hash before loading it.
 
+## Needle3 base checkpoint (`base-v3/`)
+
+The Needle3 base checkpoint (`needle3.cact`, from
+[`Cactus-Compute/needle3`](https://huggingface.co/Cactus-Compute/needle3)) is a
+separate, non-tuned artifact evaluated by the `needleV3` provider:
+
+```text
+IntentEvalHarness/weights/base-v3/
+  needle3.cact
+  base-checkpoint.manifest.json
+```
+
+Its provenance file is named `base-checkpoint.manifest.json` (matching the
+Needle2 base-checkpoint convention), not `manifest.json`, so it is never picked
+up by the tuned-artifact manifest auto-discovery described above. Configure its
+location with `Needle:V3WeightsPath` (default `weights/base-v3/needle3.cact`),
+`Needle:V3WeightsDisplayName`, and optionally `Needle:V3WeightsSha256` in
+`appsettings.json`. `needleV3` cannot be selected together with `needleBase` or
+a tuned Needle2 key in the same `--providers` run; see
+[`../native/README.md`](../native/README.md) for why the native engines are
+mutually exclusive.
+
 Weights, checkpoints, and adapters are generated locally and are not committed.
 Record completed runs in the canonical append-only
 [`../../docs/experiments/EXPERIMENT_LOG.md`](../../docs/experiments/EXPERIMENT_LOG.md).

@@ -329,7 +329,7 @@ public static class Program
             Console.WriteLine($"Running {selectedCases.Count} selected case(s): {string.Join(", ", selectedOrdinals)}");
         }
 
-        var allProviders = BuildProviders(projectRoot, configuration, loggerFactory);
+        var allProviders = BuildProviders(projectRoot, repositoryRoot, configuration, loggerFactory);
         List<EvalProvider> providers;
 
         try
@@ -402,7 +402,7 @@ public static class Program
         Console.WriteLine($"Results written to {HarnessPathUtils.ToProjectRelative(projectRoot, outDir)}");
     }
 
-    private static List<EvalProvider> BuildProviders(string projectRoot, IConfiguration configuration, ILoggerFactory loggerFactory)
+    private static List<EvalProvider> BuildProviders(string projectRoot, string repositoryRoot, IConfiguration configuration, ILoggerFactory loggerFactory)
     {
         var openAiService = TryCreateOpenAiService(configuration, loggerFactory);
         var weightRegistry = new NeedleWeightRegistry(projectRoot, configuration);
@@ -458,7 +458,87 @@ public static class Program
                     }));
         }
 
+        NeedleIntentClient? v3NeedleClient = null;
+        var v3Artifact = BuildV3Artifact(projectRoot, repositoryRoot, configuration);
+        if (v3Artifact is not null)
+        {
+            providers.Add(
+                new EvalProvider(
+                    key: v3Artifact.ProviderKey,
+                    displayName: v3Artifact.DisplayName,
+                    enabled: true,
+                    evaluateAsync: testCase => Task.FromResult(EvaluateNeedle(v3NeedleClient, testCase, v3Artifact.ProviderKey)),
+                    initializeAsync: () =>
+                    {
+                        v3NeedleClient = TryCreateNeedleV3Client(repositoryRoot, configuration, v3Artifact);
+                        return Task.CompletedTask;
+                    },
+                    disposeAction: () =>
+                    {
+                        v3NeedleClient?.Dispose();
+                        v3NeedleClient = null;
+                    }));
+        }
+
         return providers;
+    }
+
+    private static NeedleWeightArtifact? BuildV3Artifact(string projectRoot, string repositoryRoot, IConfiguration configuration)
+    {
+        var configuredPath = configuration["Needle:V3WeightsPath"];
+        if (string.IsNullOrWhiteSpace(configuredPath))
+        {
+            return null;
+        }
+
+        string resolvedPath;
+        if (Path.IsPathRooted(configuredPath))
+        {
+            resolvedPath = configuredPath;
+        }
+        else
+        {
+            var candidates = new[]
+            {
+                Path.GetFullPath(Path.Combine(projectRoot, configuredPath)),
+                Path.GetFullPath(Path.Combine(repositoryRoot, configuredPath)),
+                Path.GetFullPath(Path.Combine(repositoryRoot, "IntentEvalHarness", configuredPath))
+            };
+            resolvedPath = candidates.FirstOrDefault(File.Exists) ?? candidates[0];
+        }
+
+        var displayName = configuration["Needle:V3WeightsDisplayName"];
+        var fileExists = File.Exists(resolvedPath);
+
+        return new NeedleWeightArtifact
+        {
+            ProviderKey = "needleV3",
+            DisplayName = string.IsNullOrWhiteSpace(displayName) ? "Needle 3 Base" : displayName,
+            WeightsPath = resolvedPath,
+            Sha256 = configuration["Needle:V3WeightsSha256"],
+            FileExists = fileExists,
+            FileSizeBytes = fileExists ? new FileInfo(resolvedPath).Length : null
+        };
+    }
+
+    private static NeedleIntentClient? TryCreateNeedleV3Client(string repositoryRoot, IConfiguration configuration, NeedleWeightArtifact artifact)
+    {
+        try
+        {
+            var configuredNativePath = configuration["Needle:V3NativeLibraryPath"];
+            var nativePath = string.IsNullOrWhiteSpace(configuredNativePath)
+                ? Path.Combine(repositoryRoot, "IntentEvalHarness", "native", NeedleIntentClient.GetCurrentRid(), "3.0.2", NeedleIntentClient.GetNativeLibraryFileName())
+                : configuredNativePath;
+
+            NeedleIntentClient.Configure(nativePath);
+            Console.WriteLine($"Activating Needle3 weights: {artifact.DisplayName} [{artifact.WeightsPath}]");
+            return new NeedleIntentClient(artifact);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"WARNING: Skipping Needle3 provider — {ex.Message}");
+            return null;
+        }
     }
 
     private static async Task RunProviderPassAsync(EvalProvider provider, List<EvalRow> rows)
@@ -881,7 +961,7 @@ public static class Program
         return providers;
     }
 
-    private static List<EvalProvider> SelectProviders(List<EvalProvider> allProviders, IReadOnlyList<string>? requestedProviderKeys)
+    internal static List<EvalProvider> SelectProviders(List<EvalProvider> allProviders, IReadOnlyList<string>? requestedProviderKeys)
     {
         if (requestedProviderKeys is null)
         {
@@ -917,6 +997,18 @@ public static class Program
             throw new ArgumentException(
                 $"Provider(s) disabled by configuration: {string.Join(", ", disabledProviders)}. " +
                 "For OpenAI, set OpenAI:Enabled=true, OpenAI:AllowLiveCalls=true, and OpenAI:ApiKey.");
+        }
+
+        var selectedNeedleKeys = selected
+            .Select(provider => provider.Key)
+            .Where(key => key.StartsWith("needle", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        if (selectedNeedleKeys.Any(key => string.Equals(key, "needleV3", StringComparison.OrdinalIgnoreCase)) &&
+            selectedNeedleKeys.Any(key => !string.Equals(key, "needleV3", StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ArgumentException(
+                "needleV3 (Needle3 engine) cannot be selected together with needleBase or a tuned Needle2 key in one run. " +
+                "The Needle2 and Needle3 native engines cannot be loaded in the same process; run them in separate invocations.");
         }
 
         return selected;
@@ -1002,9 +1094,11 @@ public static class Program
         Console.WriteLine("  dotnet run --project IntentEvalHarness -- --providers needleBase --compare-baseline Baselines/openAi_frozen_20260823_full45");
         Console.WriteLine("  dotnet run --project IntentEvalHarness -- --providers needleBase --compare-baseline Baselines/openAi_frozen_20260823_full45 --compare-metrics runtime,cost");
         Console.WriteLine("  dotnet run --project IntentEvalHarness -- --providers openAi --freeze-baseline openAi_frozen_20260904_full45");
+        Console.WriteLine("  dotnet run --project IntentEvalHarness -- --providers needleV3");
         Console.WriteLine("  dotnet run --project IntentEvalHarness -- --export-training-jsonl Dataset/needle-training-seed.json --output Dataset/training_set.seed.jsonl");
         Console.WriteLine("Provider keys:");
-        Console.WriteLine("  openAi, needleBase, and any discovered tuned Needle key such as needleMyTunedRun");
+        Console.WriteLine("  openAi, needleBase, needleV3, and any discovered tuned Needle2 key such as needleMyTunedRun");
+        Console.WriteLine("  needleV3 (Needle3 engine) cannot be selected together with needleBase or a tuned Needle2 key in one run: the native engines are mutually exclusive within one process.");
     }
 
     private static OpenAiIntentEvaluator? TryCreateOpenAiService(IConfiguration configuration, ILoggerFactory loggerFactory)

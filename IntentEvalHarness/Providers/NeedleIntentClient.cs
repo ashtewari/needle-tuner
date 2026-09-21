@@ -151,13 +151,13 @@ public sealed class NeedleIntentClient : IDisposable
     return NativeLibrary.TryLoad(candidate, assembly, searchPath, out handle);
   }
 
-  private static string GetCurrentRid()
+  public static string GetCurrentRid()
   {
     var architecture = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "arm64" : "x64";
     return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? $"win-{architecture}" : $"linux-{architecture}";
   }
 
-  private static string GetNativeLibraryFileName() =>
+  public static string GetNativeLibraryFileName() =>
     RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "libneedle.dll" : "libneedle.so";
 
   private static bool HasDirectorySeparator(string path)

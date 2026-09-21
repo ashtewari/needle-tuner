@@ -2,15 +2,32 @@
 param(
     [ValidateSet('auto', 'win-x64', 'win-arm64', 'linux-x64', 'linux-arm64')]
     [string]$Rid = 'auto',
+    [ValidateSet('2.0.10', '3.0.2')]
+    [string]$EngineVersion = '2.0.10',
     [switch]$Force,
     [switch]$DryRun
 )
 
 $ErrorActionPreference = 'Stop'
 
-$cactusVersion = '2.0.10'
-$wheelUrl = 'https://files.pythonhosted.org/packages/24/ac/84d720ba744e79f3fa5483f0ea6b71f14d329fae3623dd0f74236f19c938/cactus_needle-2.0.10-py3-none-any.whl'
-$wheelSha256 = 'f263b8e74fde5e225bb19a1c2747a3c2164272e27f1a7b948ecea3f3e1d925d9'
+$cactusVersionDefault = '2.0.10'
+
+# Pinned wheel provenance per supported engine version; never accept an
+# arbitrary caller-supplied URL/hash pair here.
+$pinnedWheels = @{
+    '2.0.10' = @{
+        url = 'https://files.pythonhosted.org/packages/24/ac/84d720ba744e79f3fa5483f0ea6b71f14d329fae3623dd0f74236f19c938/cactus_needle-2.0.10-py3-none-any.whl'
+        sha256 = 'f263b8e74fde5e225bb19a1c2747a3c2164272e27f1a7b948ecea3f3e1d925d9'
+    }
+    '3.0.2' = @{
+        url = 'https://files.pythonhosted.org/packages/f3/b0/7b2ac5951fc639aa113a8244530f7d236645212bc6144f55a099dd6c594f/cactus_needle-3.0.2-py3-none-any.whl'
+        sha256 = '99200776c42b2af93325326f1030b49da6af3fa9d66e5d979b44f5e472e4e739'
+    }
+}
+
+$cactusVersion = $EngineVersion
+$wheelUrl = $pinnedWheels[$EngineVersion].url
+$wheelSha256 = $pinnedWheels[$EngineVersion].sha256
 
 function Resolve-Rid {
     if ($Rid -ne 'auto') {
@@ -32,11 +49,11 @@ function Resolve-Rid {
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $resolvedRid = Resolve-Rid
 $nativeRoot = Join-Path $repoRoot 'IntentEvalHarness\native'
-$destinationDirectory = Join-Path $nativeRoot $resolvedRid
+$destinationDirectory = if ($EngineVersion -eq $cactusVersionDefault) { Join-Path $nativeRoot $resolvedRid } else { Join-Path (Join-Path $nativeRoot $resolvedRid) $EngineVersion }
 $libraryName = if ($resolvedRid.StartsWith('win-')) { 'libneedle.dll' } else { 'libneedle.so' }
 $destination = Join-Path $destinationDirectory $libraryName
 $provenancePath = Join-Path $destinationDirectory 'acquisition.json'
-$venvRoot = Join-Path $repoRoot '.venv-needle'
+$venvRoot = if ($EngineVersion -eq $cactusVersionDefault) { Join-Path $repoRoot '.venv-needle' } else { Join-Path $repoRoot ".venv-needle-$EngineVersion" }
 $venvPython = if ($resolvedRid.StartsWith('win-')) { Join-Path $venvRoot 'Scripts\python.exe' } else { Join-Path $venvRoot 'bin\python' }
 $bootstrapPath = Join-Path $venvRoot '.needle-bootstrap.json'
 
