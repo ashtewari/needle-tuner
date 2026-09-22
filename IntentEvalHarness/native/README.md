@@ -3,14 +3,14 @@
 This directory holds the local Needle native engine binaries, one subtree per
 engine generation:
 
-- `<rid>/libneedle.{dll,so}` — the default-pinned Needle2 engine (`cactus-needle` 2.0.10).
-- `<rid>/3.0.2/libneedle.{dll,so}` — the Needle3 engine (`cactus-needle` 3.0.2), stored in a
-  version-suffixed subfolder so both engine generations can coexist locally without
-  overwriting each other.
+- `<rid>/libneedle.{dll,so}` — the Needle2 engine (`cactus-needle` 2.0.10).
+- `<rid>/3.0.2/libneedle.{dll,so}` — the default-pinned Needle3 engine (`cactus-needle`
+  3.0.2), stored in a version-suffixed subfolder so both engine generations can
+  coexist locally without overwriting each other.
 
 Create the pinned environment and fetch the native engine through the
 repository scripts. The default invocation (no `-EngineVersion`/`--engine-version`)
-acquires the Needle2 engine exactly as before:
+acquires the Needle3 engine:
 
 ```powershell
 pwsh -File scripts/bootstrap-needle.ps1 -Cuda
@@ -22,18 +22,18 @@ bash scripts/bootstrap-wsl.sh --cuda
 bash scripts/acquire-needle-native.sh
 ```
 
-To acquire the Needle3 engine instead, pass the pinned `3.0.2` engine version
-(it installs the same full JAX/Flax/Optax fine-tuning stack as Needle2 and
+To acquire the Needle2 engine instead, pass the pinned `2.0.10` engine version
+(it installs the same full JAX/Flax/Optax fine-tuning stack as Needle3 and
 supports `-Cuda`/`--cuda`):
 
 ```powershell
-pwsh -File scripts/bootstrap-needle.ps1 -EngineVersion 3.0.2
-pwsh -File scripts/acquire-needle-native.ps1 -EngineVersion 3.0.2
+pwsh -File scripts/bootstrap-needle.ps1 -EngineVersion 2.0.10
+pwsh -File scripts/acquire-needle-native.ps1 -EngineVersion 2.0.10
 ```
 
 ```bash
-bash scripts/bootstrap-wsl.sh --engine-version 3.0.2
-bash scripts/acquire-needle-native.sh --engine-version 3.0.2
+bash scripts/bootstrap-wsl.sh --engine-version 2.0.10
+bash scripts/acquire-needle-native.sh --engine-version 2.0.10
 ```
 
 The scripts pin and verify the `cactus-needle` package for the selected engine

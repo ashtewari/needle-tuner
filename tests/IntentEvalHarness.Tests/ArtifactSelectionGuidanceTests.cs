@@ -13,7 +13,7 @@ public sealed class ArtifactSelectionGuidanceTests
         {
             "README.md",
             "IntentEvalHarness/weights/README.md",
-            ".github/skills/needle2-train-eval-loop/SKILL.md"
+            ".github/skills/needle-train-eval-loop/SKILL.md"
         };
 
         foreach (var relativePath in guidance)

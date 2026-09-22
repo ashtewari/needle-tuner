@@ -3,7 +3,7 @@ param(
     [string]$DatasetPath = 'IntentEvalHarness/Dataset/training_set.300.jsonl',
     [string]$RunName = '',
     [ValidateSet('2.0.10', '3.0.2')]
-    [string]$EngineVersion = '2.0.10',
+    [string]$EngineVersion = '3.0.2',
     [int]$Epochs = 15,
     [int]$LoraRank = 16,
     [int]$LoraAlpha = 32,

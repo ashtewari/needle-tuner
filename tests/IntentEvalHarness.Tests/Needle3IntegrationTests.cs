@@ -160,7 +160,7 @@ public sealed class Needle3IntegrationTests
     [Theory]
     [InlineData("scripts/needle-finetune.sh")]
     [InlineData("scripts/needle-finetune.ps1")]
-    public void FinetuneWrappers_SupportEngineVersionAndPreserveNeedle2Defaults(string relativePath)
+    public void FinetuneWrappers_SupportBothEngineVersions(string relativePath)
     {
         var repositoryRoot = HarnessPathUtils.GetRepositoryRoot(HarnessPathUtils.GetProjectRoot(AppContext.BaseDirectory));
         var script = File.ReadAllText(Path.Combine(repositoryRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)));
@@ -194,6 +194,25 @@ public sealed class Needle3IntegrationTests
         Assert.Contains("Cactus-Compute/needle2", powerShellScript, StringComparison.Ordinal);
         Assert.Contains("checkpoints/needle2.pkl", powerShellScript, StringComparison.Ordinal);
         Assert.Contains("base-checkpoint.manifest.json", powerShellScript, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void PrepareBaseCheckpointScripts_SupportEngineVersionWithNeedle3FinetuneBaseDefault()
+    {
+        var projectRoot = HarnessPathUtils.GetProjectRoot(AppContext.BaseDirectory);
+        var repositoryRoot = HarnessPathUtils.GetRepositoryRoot(projectRoot);
+        var bashScript = File.ReadAllText(Path.Combine(repositoryRoot, "scripts", "prepare-needle-base-checkpoint.sh"));
+        var powerShellScript = File.ReadAllText(Path.Combine(repositoryRoot, "scripts", "prepare-needle-base-checkpoint.ps1"));
+
+        Assert.Contains("--engine-version", bashScript, StringComparison.Ordinal);
+        Assert.Contains("Cactus-Compute/needle3", bashScript, StringComparison.Ordinal);
+        Assert.Contains("checkpoints/needle3.safetensors", bashScript, StringComparison.Ordinal);
+        Assert.Contains("weights/base-v3/finetune/needle3.safetensors", bashScript, StringComparison.Ordinal);
+
+        Assert.Contains("[string]$EngineVersion", powerShellScript, StringComparison.Ordinal);
+        Assert.Contains("Cactus-Compute/needle3", powerShellScript, StringComparison.Ordinal);
+        Assert.Contains("checkpoints/needle3.safetensors", powerShellScript, StringComparison.Ordinal);
+        Assert.Contains("weights/base-v3/finetune/needle3.safetensors", powerShellScript, StringComparison.Ordinal);
     }
 }
 

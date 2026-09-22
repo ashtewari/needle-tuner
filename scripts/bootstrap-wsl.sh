@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-readonly CACTUS_VERSION_DEFAULT="2.0.10"
+readonly CACTUS_VERSION_DEFAULT="3.0.2"
 
 usage() {
     cat <<'EOF'
@@ -11,10 +11,11 @@ Usage: bash scripts/bootstrap-wsl.sh [--cuda] [--venv <path>] [--engine-version 
 Creates a Python 3.12 virtual environment and installs the pinned Needle stack.
 --cuda installs the pinned JAX CUDA 12 extra only after confirming that WSL can
 see an NVIDIA GPU. It never installs or changes a host/WSL GPU driver.
---engine-version selects the pinned cactus-needle release: 2.0.10 (Needle2,
-default) or 3.0.2 (Needle3). Both include the full JAX/flax/optax fine-tuning
-stack and support --cuda. Non-default versions default to a version-suffixed
-venv (.venv-needle-<version>) so both can coexist locally.
+--engine-version selects the pinned cactus-needle release: 3.0.2 (Needle3,
+default) or 2.0.10 (Needle2). Both include the full JAX/flax/optax fine-tuning
+stack and support --cuda. Needle3 uses a version-suffixed venv
+(.venv-needle-3.0.2); Needle2 uses the plain .venv-needle so both can coexist
+locally.
 --prepare-base-checkpoint explicitly downloads and verifies the official ~90 MB
 Needle2 base checkpoint after environment setup.
 EOF
@@ -72,14 +73,13 @@ case "$engine_version" in
         die "Unsupported --engine-version '$engine_version'. Supported versions: 2.0.10, 3.0.2."
         ;;
 esac
-is_default_version=1
-[[ "$engine_version" == "$CACTUS_VERSION_DEFAULT" ]] || is_default_version=0
-
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$script_dir/.." && pwd)"
 python_bin="${PYTHON_BIN:-python3.12}"
 if [[ -z "$venv_path" ]]; then
-    if [[ $is_default_version -eq 1 ]]; then
+    # Keyed by literal engine version (not "which one is default") so the venv
+    # location is stable regardless of which version CACTUS_VERSION_DEFAULT is.
+    if [[ "$engine_version" == "2.0.10" ]]; then
         venv_path="$repo_root/.venv-needle"
     else
         venv_path="$repo_root/.venv-needle-$engine_version"

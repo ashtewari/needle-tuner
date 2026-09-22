@@ -4,9 +4,10 @@
 
 .DESCRIPTION
   -Download resolves immutable metadata from the official Hugging Face repository
-  (Cactus-Compute/needle2 by default), verifies its published LFS SHA-256, and
-  records the resolved revision. -Source imports a user-supplied file only when
-  its expected SHA-256 is supplied via -Sha256 and matches.
+  (Cactus-Compute/needle3 by default, or Cactus-Compute/needle2 for
+  -EngineVersion 2.0.10), verifies its published LFS SHA-256, and records the
+  resolved revision. -Source imports a user-supplied file only when its
+  expected SHA-256 is supplied via -Sha256 and matches.
 
 .EXAMPLE
   pwsh scripts/prepare-needle-base-checkpoint.ps1 -Download
@@ -19,8 +20,10 @@ param(
     [switch]$Download,
     [string]$Source = '',
     [string]$Sha256 = '',
-    [string]$Repository = 'Cactus-Compute/needle2',
-    [string]$Filename = 'checkpoints/needle2.pkl',
+    [ValidateSet('2.0.10', '3.0.2')]
+    [string]$EngineVersion = '3.0.2',
+    [string]$Repository = '',
+    [string]$Filename = '',
     [string]$Output = '',
     [string]$PythonBin = '',
     [switch]$Force,
@@ -54,6 +57,23 @@ elseif ($Sha256) {
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 
+# Engine-specific defaults. 3.0.2 (Needle3) points at the fine-tune base
+# checkpoint (needle3.safetensors), not the separate eval-only .cact artifact.
+if ($EngineVersion -eq '3.0.2') {
+    $repositoryDefault = 'Cactus-Compute/needle3'
+    $filenameDefault = 'checkpoints/needle3.safetensors'
+    $outputDefault = 'IntentEvalHarness/weights/base-v3/finetune/needle3.safetensors'
+    $venvDirDefault = '.venv-needle-3.0.2'
+}
+else {
+    $repositoryDefault = 'Cactus-Compute/needle2'
+    $filenameDefault = 'checkpoints/needle2.pkl'
+    $outputDefault = 'IntentEvalHarness/weights/base/needle2.pkl'
+    $venvDirDefault = '.venv-needle'
+}
+if ([string]::IsNullOrWhiteSpace($Repository)) { $Repository = $repositoryDefault }
+if ([string]::IsNullOrWhiteSpace($Filename)) { $Filename = $filenameDefault }
+
 function Resolve-RepoPath {
     param([string]$RelativeOrAbsolutePath)
     if ([System.IO.Path]::IsPathRooted($RelativeOrAbsolutePath)) {
@@ -63,13 +83,13 @@ function Resolve-RepoPath {
 }
 
 if ([string]::IsNullOrWhiteSpace($Output)) {
-    $Output = 'IntentEvalHarness/weights/base/needle2.pkl'
+    $Output = $outputDefault
 }
 $outputPath = Resolve-RepoPath $Output
 $outputDir = Split-Path -Parent $outputPath
 $manifestPath = Join-Path $outputDir 'base-checkpoint.manifest.json'
 if ([string]::IsNullOrWhiteSpace($PythonBin)) {
-    $PythonBin = Join-Path $repoRoot '.venv-needle\Scripts\python.exe'
+    $PythonBin = Join-Path $repoRoot "$venvDirDefault\Scripts\python.exe"
 }
 
 if ($DryRun) {

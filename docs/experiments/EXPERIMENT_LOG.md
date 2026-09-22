@@ -1,16 +1,18 @@
-# Needle2 experiment log
+# Needle experiment log
 
-This is the canonical, append-only log for Needle2 fine-tuning and evaluation
-experiments. Scripts and the `needle2-train-eval-loop` skill must refer to this
-file; do not create a second experiment history. Append every successful,
-regressed, and failed run with its dataset, settings, measured result, finding,
-next decision, and expected result.
+This is the canonical, append-only log for Needle fine-tuning and evaluation
+experiments, covering both Needle2 (2.0.10) and Needle3 (3.0.2). Scripts and
+the `needle-train-eval-loop` skill must refer to this file; do not create a
+second experiment history. Append every successful, regressed, and failed run
+with its engine version, dataset, settings, measured result, finding, next
+decision, and expected result.
 
-The entries below are historical measurements copied and curated from the
-WhichBox working-tree experiment history. They are not current defaults and
-are not guarantees of future runs. Results were measured on the 45-case
-held-out dataset. The frozen OpenAI baseline was 93.33% intent accuracy and
-71.11% parameter accuracy.
+The entries below are historical measurements. Needle2-era entries were
+copied and curated from the WhichBox working-tree experiment history; they
+predate Needle3 support. They are not current defaults and are not guarantees
+of future runs. Results were measured on the 45-case held-out dataset. The
+frozen OpenAI baseline was 93.33% intent accuracy and 71.11% parameter
+accuracy.
 
 ## Historical runs
 

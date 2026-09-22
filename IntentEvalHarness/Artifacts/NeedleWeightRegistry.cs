@@ -13,6 +13,8 @@ public sealed class NeedleWeightArtifact
     public string? Sha256 { get; init; }
     public bool FileExists { get; init; }
     public long? FileSizeBytes { get; init; }
+    // "2.0.10" here is a legacy-compatibility fallback for callers/manifests that
+    // predate multi-engine support, not the current default engine version.
     public string EngineVersion { get; init; } = "2.0.10";
 }
 
@@ -30,6 +32,9 @@ public sealed class NeedleWeightRegistry
         _configuration = configuration;
     }
 
+    // The "2.0.10" parameter default is a legacy-compatibility fallback for callers
+    // written before multi-engine support; it is not tied to the current default
+    // engine version. Callers should pass the engine version explicitly.
     public NeedleWeightArtifact? GetPreferredTunedArtifact(string engineVersion = "2.0.10")
     {
         var configuredArtifact = TryGetConfiguredArtifact(engineVersion);
@@ -135,6 +140,9 @@ public sealed class NeedleWeightRegistry
             }
 
             var directoryName = Path.GetFileName(Path.GetDirectoryName(manifestPath)) ?? "Tuned";
+            // "2.0.10" fallback is for legacy manifests written before the
+            // engineVersion field existed; do not change this to the current
+            // default engine version.
             var engineVersion = string.IsNullOrWhiteSpace(manifest.EngineVersion) ? "2.0.10" : manifest.EngineVersion;
 
             artifacts.Add(new NeedleWeightArtifact

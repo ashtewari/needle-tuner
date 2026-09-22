@@ -3,14 +3,12 @@ param(
     [ValidateSet('auto', 'win-x64', 'win-arm64', 'linux-x64', 'linux-arm64')]
     [string]$Rid = 'auto',
     [ValidateSet('2.0.10', '3.0.2')]
-    [string]$EngineVersion = '2.0.10',
+    [string]$EngineVersion = '3.0.2',
     [switch]$Force,
     [switch]$DryRun
 )
 
 $ErrorActionPreference = 'Stop'
-
-$cactusVersionDefault = '2.0.10'
 
 # Pinned wheel provenance per supported engine version; never accept an
 # arbitrary caller-supplied URL/hash pair here.
@@ -49,11 +47,13 @@ function Resolve-Rid {
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $resolvedRid = Resolve-Rid
 $nativeRoot = Join-Path $repoRoot 'IntentEvalHarness\native'
-$destinationDirectory = if ($EngineVersion -eq $cactusVersionDefault) { Join-Path $nativeRoot $resolvedRid } else { Join-Path (Join-Path $nativeRoot $resolvedRid) $EngineVersion }
+# Keyed by literal engine version (not "which one is default") so native/venv
+# locations are stable regardless of the -EngineVersion parameter default.
+$destinationDirectory = if ($EngineVersion -eq '2.0.10') { Join-Path $nativeRoot $resolvedRid } else { Join-Path (Join-Path $nativeRoot $resolvedRid) $EngineVersion }
 $libraryName = if ($resolvedRid.StartsWith('win-')) { 'libneedle.dll' } else { 'libneedle.so' }
 $destination = Join-Path $destinationDirectory $libraryName
 $provenancePath = Join-Path $destinationDirectory 'acquisition.json'
-$venvRoot = if ($EngineVersion -eq $cactusVersionDefault) { Join-Path $repoRoot '.venv-needle' } else { Join-Path $repoRoot ".venv-needle-$EngineVersion" }
+$venvRoot = if ($EngineVersion -eq '2.0.10') { Join-Path $repoRoot '.venv-needle' } else { Join-Path $repoRoot ".venv-needle-$EngineVersion" }
 $venvPython = if ($resolvedRid.StartsWith('win-')) { Join-Path $venvRoot 'Scripts\python.exe' } else { Join-Path $venvRoot 'bin\python' }
 $bootstrapPath = Join-Path $venvRoot '.needle-bootstrap.json'
 

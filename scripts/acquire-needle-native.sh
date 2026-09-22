@@ -2,17 +2,17 @@
 
 set -euo pipefail
 
-readonly CACTUS_VERSION_DEFAULT="2.0.10"
+readonly CACTUS_VERSION_DEFAULT="3.0.2"
 
 usage() {
     cat <<'EOF'
 Usage: bash scripts/acquire-needle-native.sh [--rid <linux-x64|linux-arm64>] [--engine-version <2.0.10|3.0.2>] [--force] [--dry-run]
 
 Fetches the platform-native Needle engine through the verified, pinned
-cactus-needle CLI. The engine is stored under IntentEvalHarness/native/<rid>
-for the default engine version, or IntentEvalHarness/native/<rid>/<engine-version>
-for a non-default pinned version (for example Needle3's 3.0.2 engine), so
-both engine generations can be acquired locally without overwriting each other.
+cactus-needle CLI. The engine is stored under
+IntentEvalHarness/native/<rid>/3.0.2 for Needle3 (the default engine version),
+or IntentEvalHarness/native/<rid> for Needle2 (2.0.10), so both engine
+generations can be acquired locally without overwriting each other.
 EOF
 }
 
@@ -63,7 +63,9 @@ esac
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$script_dir/.." && pwd)"
 native_root="$repo_root/IntentEvalHarness/native"
-if [[ "$engine_version" == "$CACTUS_VERSION_DEFAULT" ]]; then
+# Keyed by literal engine version (not "which one is default") so the venv
+# location is stable regardless of which version CACTUS_VERSION_DEFAULT is.
+if [[ "$engine_version" == "2.0.10" ]]; then
     venv_root="$repo_root/.venv-needle"
 else
     venv_root="$repo_root/.venv-needle-$engine_version"
@@ -82,7 +84,9 @@ fi
     die "The Bash acquisition script supports linux-x64 and linux-arm64 only."
 
 library_name="libneedle.so"
-if [[ "$engine_version" == "$CACTUS_VERSION_DEFAULT" ]]; then
+# Keyed by literal engine version (not "which one is default") so the native
+# binary location is stable regardless of which version CACTUS_VERSION_DEFAULT is.
+if [[ "$engine_version" == "2.0.10" ]]; then
     destination_dir="$native_root/$rid"
 else
     destination_dir="$native_root/$rid/$engine_version"

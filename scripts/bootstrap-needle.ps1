@@ -2,13 +2,11 @@
 param(
     [string]$VenvPath = '',
     [ValidateSet('2.0.10', '3.0.2')]
-    [string]$EngineVersion = '2.0.10',
+    [string]$EngineVersion = '3.0.2',
     [switch]$Cuda
 )
 
 $ErrorActionPreference = 'Stop'
-
-$cactusVersionDefault = '2.0.10'
 
 # Pinned wheel provenance per supported engine version; never accept an
 # arbitrary caller-supplied URL/hash pair here. Both 2.0.10 (Needle2) and
@@ -31,11 +29,12 @@ $pinnedWheels = @{
 $cactusVersion = $EngineVersion
 $wheelUrl = $pinnedWheels[$EngineVersion].url
 $wheelSha256 = $pinnedWheels[$EngineVersion].sha256
-$isDefaultVersion = $EngineVersion -eq $cactusVersionDefault
 $repoRoot = Split-Path -Parent $PSScriptRoot
 
 if ([string]::IsNullOrWhiteSpace($VenvPath)) {
-    $VenvPath = if ($isDefaultVersion) { Join-Path $repoRoot '.venv-needle' } else { Join-Path $repoRoot ".venv-needle-$EngineVersion" }
+    # Keyed by literal engine version (not "which one is default") so the venv
+    # location is stable regardless of the -EngineVersion parameter default.
+    $VenvPath = if ($EngineVersion -eq '2.0.10') { Join-Path $repoRoot '.venv-needle' } else { Join-Path $repoRoot ".venv-needle-$EngineVersion" }
 }
 elseif (-not [System.IO.Path]::IsPathRooted($VenvPath)) {
     $VenvPath = Join-Path $repoRoot $VenvPath

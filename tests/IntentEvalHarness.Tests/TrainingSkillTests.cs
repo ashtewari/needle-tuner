@@ -9,7 +9,7 @@ public sealed class TrainingSkillTests
     {
         var projectRoot = HarnessPathUtils.GetProjectRoot(AppContext.BaseDirectory);
         var repositoryRoot = HarnessPathUtils.GetRepositoryRoot(projectRoot);
-        var skillPath = Path.Combine(repositoryRoot, ".github", "skills", "needle2-train-eval-loop", "SKILL.md");
+        var skillPath = Path.Combine(repositoryRoot, ".github", "skills", "needle-train-eval-loop", "SKILL.md");
 
         Assert.True(File.Exists(skillPath));
         var skill = File.ReadAllText(skillPath);

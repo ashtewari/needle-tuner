@@ -1,9 +1,9 @@
 # Experiments
 
-`EXPERIMENT_LOG.md` is the single canonical, append-only Needle2 experiment
-history. The training/evaluation scripts and the
-`needle2-train-eval-loop` skill should link to this path rather than creating
-another log.
+`EXPERIMENT_LOG.md` is the single canonical, append-only Needle experiment
+history covering both Needle2 and Needle3. The training/evaluation scripts and
+the `needle-train-eval-loop` skill should link to this path rather than
+creating another log.
 
 Historical measurements and reproducible commands are deliberately separate:
 the log records completed runs, while scripts describe how to perform a new

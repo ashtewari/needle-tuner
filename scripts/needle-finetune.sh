@@ -11,7 +11,7 @@ learning_rate="0.0001"
 batch_size=4
 max_len=1024
 val_split="0.1"
-engine_version="2.0.10"
+engine_version="3.0.2"
 base_checkpoint=""
 native_library=""
 python_bin=""
@@ -31,7 +31,7 @@ max length 1024, validation split 0.1, and training_set.300.jsonl.
 Options:
   --dataset-path <path>       Training JSONL, relative to the repository root.
   --run-name <name>           Run directory name; default is a UTC timestamp.
-  --engine-version <ver>      2.0.10 (Needle2, default) or 3.0.2 (Needle3).
+  --engine-version <ver>      3.0.2 (Needle3, default) or 2.0.10 (Needle2).
   --epochs <count>            Epochs; default: 15.
   --lora-rank <count>         LoRA rank; default: 16.
   --lora-alpha <value>        LoRA alpha; default: 32.

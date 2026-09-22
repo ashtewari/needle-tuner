@@ -2,8 +2,7 @@
 
 set -euo pipefail
 
-readonly HF_REPOSITORY_DEFAULT="Cactus-Compute/needle2"
-readonly HF_FILENAME_DEFAULT="checkpoints/needle2.pkl"
+readonly ENGINE_VERSION_DEFAULT="3.0.2"
 
 usage() {
     cat <<'EOF'
@@ -13,18 +12,27 @@ Usage:
 
 Prepare the ignored local Needle base checkpoint required by the fine-tune
 wrappers. --download resolves immutable metadata from the official Hugging
-Face repository (Cactus-Compute/needle2 by default), verifies its published
-LFS SHA-256, and records the resolved revision. --source imports a
-user-supplied file only when its expected SHA-256 is supplied and matches.
+Face repository (Cactus-Compute/needle3 by default, or Cactus-Compute/needle2
+for --engine-version 2.0.10), verifies its published LFS SHA-256, and records
+the resolved revision. --source imports a user-supplied file only when its
+expected SHA-256 is supplied and matches.
 
 Options:
   --download                Download the official checkpoint (explicit; about 90 MB).
   --source <path>           Import a pre-acquired checkpoint.
   --sha256 <hash>           Required expected SHA-256 for --source.
-  --repository <owner/name> Hugging Face repository; default: Cactus-Compute/needle2.
-  --filename <path>         Repository-relative checkpoint path; default: checkpoints/needle2.pkl.
-  --output <path>           Destination; default: IntentEvalHarness/weights/base/needle2.pkl.
-  --python-bin <path>       Python with huggingface_hub; default: .venv-needle/bin/python.
+  --engine-version <ver>    3.0.2 (Needle3, default) or 2.0.10 (Needle2); selects
+                             engine-specific defaults below.
+  --repository <owner/name> Hugging Face repository; default is engine-version-specific
+                             (Cactus-Compute/needle3 or Cactus-Compute/needle2).
+  --filename <path>         Repository-relative checkpoint path; default is
+                             engine-version-specific (checkpoints/needle3.safetensors
+                             or checkpoints/needle2.pkl).
+  --output <path>           Destination; default is engine-version-specific
+                             (IntentEvalHarness/weights/base-v3/finetune/needle3.safetensors
+                             or IntentEvalHarness/weights/base/needle2.pkl).
+  --python-bin <path>       Python with huggingface_hub; default is engine-version-specific
+                             (.venv-needle-3.0.2/bin/python or .venv-needle/bin/python).
   --force                   Replace an existing checkpoint after verification.
   --dry-run                 Print the resolved action without downloading or writing.
   -h, --help                Show this help.
@@ -42,6 +50,7 @@ output_path=""
 python_bin=""
 hf_repository=""
 hf_filename=""
+engine_version="$ENGINE_VERSION_DEFAULT"
 force=0
 dry_run=0
 while [[ $# -gt 0 ]]; do
@@ -54,6 +63,7 @@ while [[ $# -gt 0 ]]; do
             [[ -z "$mode" ]] || die "Choose exactly one of --download or --source."
             mode="source"; source_path="$2"; shift 2 ;;
         --sha256) require_value "$1" "${2:-}"; expected_hash="${2,,}"; shift 2 ;;
+        --engine-version) require_value "$1" "${2:-}"; engine_version="$2"; shift 2 ;;
         --repository) require_value "$1" "${2:-}"; hf_repository="$2"; shift 2 ;;
         --filename) require_value "$1" "${2:-}"; hf_filename="$2"; shift 2 ;;
         --output) require_value "$1" "${2:-}"; output_path="$2"; shift 2 ;;
@@ -65,8 +75,28 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-hf_repository="${hf_repository:-$HF_REPOSITORY_DEFAULT}"
-hf_filename="${hf_filename:-$HF_FILENAME_DEFAULT}"
+# Engine-specific defaults. 3.0.2 (Needle3) points at the fine-tune base
+# checkpoint (needle3.safetensors), not the separate eval-only .cact artifact.
+case "$engine_version" in
+    3.0.2)
+        hf_repository_default="Cactus-Compute/needle3"
+        hf_filename_default="checkpoints/needle3.safetensors"
+        output_path_default="IntentEvalHarness/weights/base-v3/finetune/needle3.safetensors"
+        venv_dir_default=".venv-needle-3.0.2"
+        ;;
+    2.0.10)
+        hf_repository_default="Cactus-Compute/needle2"
+        hf_filename_default="checkpoints/needle2.pkl"
+        output_path_default="IntentEvalHarness/weights/base/needle2.pkl"
+        venv_dir_default=".venv-needle"
+        ;;
+    *)
+        die "Unsupported --engine-version '$engine_version'. Supported versions: 2.0.10, 3.0.2."
+        ;;
+esac
+
+hf_repository="${hf_repository:-$hf_repository_default}"
+hf_filename="${hf_filename:-$hf_filename_default}"
 
 [[ -n "$mode" ]] || die "Choose --download or --source <path>. Use --help for usage."
 if [[ "$mode" == "source" ]]; then
@@ -80,10 +110,10 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$script_dir/.." && pwd)"
 resolve_path() { [[ "$2" = /* ]] && realpath -m "$2" || realpath -m "$1/$2"; }
 
-output_path="$(resolve_path "$repo_root" "${output_path:-IntentEvalHarness/weights/base/needle2.pkl}")"
+output_path="$(resolve_path "$repo_root" "${output_path:-$output_path_default}")"
 output_dir="$(dirname -- "$output_path")"
 manifest_path="$output_dir/base-checkpoint.manifest.json"
-python_bin="${python_bin:-$repo_root/.venv-needle/bin/python}"
+python_bin="${python_bin:-$repo_root/$venv_dir_default/bin/python}"
 
 if [[ $dry_run -eq 1 ]]; then
     if [[ "$mode" == "download" ]]; then
