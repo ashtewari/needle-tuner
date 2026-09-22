@@ -4,7 +4,7 @@ set -euo pipefail
 
 dataset_path="IntentEvalHarness/Dataset/training_set.300.jsonl"
 run_name=""
-epochs=30
+epochs=15
 lora_rank=16
 lora_alpha=32
 learning_rate="0.0001"
@@ -25,14 +25,14 @@ usage() {
     cat <<'EOF'
 Usage: bash scripts/needle-finetune.sh [options]
 
-Defaults: 30 epochs, rank 16, alpha 32, learning rate 0.0001, batch size 4,
+Defaults: 15 epochs, rank 16, alpha 32, learning rate 0.0001, batch size 4,
 max length 1024, validation split 0.1, and training_set.300.jsonl.
 
 Options:
   --dataset-path <path>       Training JSONL, relative to the repository root.
   --run-name <name>           Run directory name; default is a UTC timestamp.
   --engine-version <ver>      2.0.10 (Needle2, default) or 3.0.2 (Needle3).
-  --epochs <count>            Epochs; default: 30.
+  --epochs <count>            Epochs; default: 15.
   --lora-rank <count>         LoRA rank; default: 16.
   --lora-alpha <value>        LoRA alpha; default: 32.
   --learning-rate <value>     Learning rate; default: 0.0001.

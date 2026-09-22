@@ -78,6 +78,61 @@ weights/checkpoints/adapters occupied approximately 2.13 GB in the source
 working tree; that omission is intentional and does not invalidate the
 recorded measurements.
 
+## Needle3 runs
+
+Needle3 (`needleV3`/tuned) is a separate engine family from Needle2 (see
+`IntentEvalHarness/native/README.md`); its runs are recorded here to avoid a
+second log file, clearly labeled by engine version. All Needle3 measurements
+below used the 45-case held-out `intent-eval-dataset.json` and the same frozen
+OpenAI baseline (93.33% intent / 71.11% parameter accuracy) as the Needle2
+runs above.
+
+| Iteration | Run | Engine | Dataset | Settings | Measured result |
+|---:|---|---|---|---|---|
+| 1 | `smoke_20260921_100332` | 3.0.2 | `training_set.300.jsonl` (345 examples) | smoke test, 1 epoch, rank 16/alpha 32, lr 1e-4, batch 4, max len 1024, val split 0.1 | Base Needle3 (`needleV3`, untuned): 71.11% intent / 66.67% parameter accuracy, 7 fallbacks. Tuned (this run): 68.89% intent / 73.33% parameter accuracy, 6 fallbacks. Final train loss 1.0512, val loss 1.1645. |
+| 2 | `full_20260922_013716` | 3.0.2 | `training_set.300.jsonl` (345 examples) | full run, 30 epochs, rank 16/alpha 32, lr 1e-4, batch 4, max len 1024, val split 0.1 (wrapper defaults) | Base Needle3 (`needleV3`, untuned): 71.11% intent / 66.67% parameter accuracy, 7 fallbacks. Tuned (this run): 71.11% intent / 66.67% parameter accuracy (identical aggregate to base), 6 fallbacks. Final train loss 0.1272, val loss bottomed at epoch 13 (0.5367) then rose to 0.5788 by epoch 30. |
+
+### Findings (Needle3)
+
+- 2026-09-21: first real (non-dry-run) execution of the Needle3 fine-tuning
+  pipeline end to end on WSL2 with an NVIDIA RTX 3060 (CUDA 12, JAX GPU
+  backend confirmed). Bootstrap, native engine acquisition, base checkpoint
+  download, one-epoch smoke-test fine-tune, and offline evaluation against
+  the frozen baseline all completed successfully with no errors.
+- The untuned Needle3 base checkpoint (71.11% intent / 66.67% parameter
+  accuracy) already exceeds the historical Needle2 base reference (62.22%
+  intent / 66.67% parameter accuracy recorded in
+  `docs/experiments/provenance/20260905_lowcap/evaluation-summary.json`).
+- The 1-epoch smoke-tuned artifact traded a small intent-accuracy drop
+  (71.11% -> 68.89%) for a parameter-accuracy gain (66.67% -> 73.33%) and one
+  fewer fallback (7 -> 6) versus the untuned Needle3 base. This is a single
+  bounded smoke run (not a quality run) and should not be generalized; it only
+  validates that the pipeline executes correctly and produces a loadable,
+  evaluable tuned artifact.
+- Locally fine-tuned Needle3 artifacts have no trained confidence head, so
+  `averageConfidence` and confidence-threshold breakdowns are `null` for both
+  the base and tuned Needle3 providers in this run's `summary.json`.
+- 2026-09-22: first explicitly-requested full 30-epoch Needle3 run
+  (`full_20260922_013716`), same WSL2/RTX 3060 environment and dataset as the
+  smoke test. Training completed all 2340 steps with no errors; validation
+  loss bottomed at epoch 13 (0.5367) and drifted back up to 0.5788 by epoch
+  30 while train loss kept falling to 0.1272 — an overfitting pattern
+  consistent with the Needle2 finding above that longer training regresses
+  held-out behavior even as loss keeps declining.
+- Measured against the 45-case held-out set, the full-run tuned artifact's
+  *aggregate* intent (71.11%) and parameter (66.67%) accuracy were identical
+  to untuned base Needle3, with one fewer fallback (6 vs 7). Per-intent
+  breakdown shifted rather than improved: `SEARCH_ITEM` intent accuracy rose
+  (60%→80%) and `MANAGE_BOX` parameter accuracy rose (80%→100%), but
+  `DELETE_ITEM` parameter accuracy fell (40%→20%) and `VIEW_INVENTORY` intent
+  accuracy fell (60%→40%). Both base and tuned Needle3 remain well below the
+  frozen OpenAI baseline (93.33% intent / 71.11% parameter accuracy).
+- Finding: this full run produced no net aggregate improvement over base
+  Needle3, echoing the Needle2 history that a full-defaults run is not a
+  reliable quality lever on its own. Next decision: prefer a dataset change
+  or a single targeted hyperparameter change (e.g. lower epoch count near the
+  epoch-13 validation-loss minimum) over repeating these exact defaults.
+
 Small provenance artifacts are retained when permitted by the extraction
 inventory: see
 `docs/experiments/provenance/20260905_lowcap/README.md` for the best-run

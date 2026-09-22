@@ -28,7 +28,7 @@ public sealed class TrainingSkillTests
         Assert.Contains("[\"weightsFile\"]", skill, StringComparison.Ordinal);
         Assert.Contains("$($manifest.weightsFile)", skill, StringComparison.Ordinal);
         Assert.DoesNotContain("whichbox_needle_tuned.cact", skill, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("--epochs 30 --lora-rank 16 --lora-alpha 32 --learning-rate 0.0001", skill, StringComparison.Ordinal);
+        Assert.Contains("--epochs 15 --lora-rank 16 --lora-alpha 32 --learning-rate 0.0001", skill, StringComparison.Ordinal);
         Assert.Contains("--batch-size 4 --max-len 1024 --val-split 0.1", skill, StringComparison.Ordinal);
 
         foreach (var relativePath in new[]

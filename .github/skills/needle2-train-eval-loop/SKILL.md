@@ -142,18 +142,23 @@ Confirm the local run contains `finetune.log`, `loss_curve.svg`,
 
 ## 5. Run a full experiment (explicit request only)
 
-The current full-run wrapper defaults are 30 epochs, rank 16, alpha 32,
+The current full-run wrapper defaults are 15 epochs, rank 16, alpha 32,
 learning rate 0.0001, batch size 4, maximum length 1024, validation split 0.1,
-and the 345-row standard dataset. These are not a quality recommendation. The
-recorded clean-room run of this exact configuration regressed to 42.22% intent
+and the 345-row standard dataset. These are not a quality recommendation.
+A recorded clean-room 30-epoch Needle2 run regressed to 42.22% intent
 accuracy, 51.11% parameter accuracy, and 15 fallbacks, versus 62.22%, 66.67%,
-and 9 fallbacks for base Needle.
+and 9 fallbacks for base Needle; a recorded 30-epoch Needle3 run showed
+validation loss bottoming around epoch 13 and rising afterward with no net
+held-out accuracy gain over base Needle3. The 15-epoch default was chosen to
+sit closer to those observed validation-loss minimums, not because it has
+itself been measured as an improvement — treat any new run's result as new
+evidence, not a foregone conclusion.
 
 ```bash
 run_name="$(date -u +%Y%m%d_%H%M%S)"
 bash scripts/needle-finetune.sh --run-name "$run_name" \
   --dataset-path IntentEvalHarness/Dataset/training_set.300.jsonl \
-  --epochs 30 --lora-rank 16 --lora-alpha 32 --learning-rate 0.0001 \
+  --epochs 15 --lora-rank 16 --lora-alpha 32 --learning-rate 0.0001 \
   --batch-size 4 --max-len 1024 --val-split 0.1
 ```
 
@@ -161,7 +166,7 @@ bash scripts/needle-finetune.sh --run-name "$run_name" \
 $runName = (Get-Date).ToUniversalTime().ToString('yyyyMMdd_HHmmss')
 pwsh -File scripts/needle-finetune.ps1 -RunName $runName `
   -DatasetPath IntentEvalHarness/Dataset/training_set.300.jsonl `
-  -Epochs 30 -LoraRank 16 -LoraAlpha 32 -LearningRate 0.0001 `
+  -Epochs 15 -LoraRank 16 -LoraAlpha 32 -LearningRate 0.0001 `
   -BatchSize 4 -MaxLen 1024 -ValSplit 0.1
 ```
 

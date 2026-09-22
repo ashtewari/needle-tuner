@@ -4,7 +4,7 @@ param(
     [string]$RunName = '',
     [ValidateSet('2.0.10', '3.0.2')]
     [string]$EngineVersion = '2.0.10',
-    [int]$Epochs = 30,
+    [int]$Epochs = 15,
     [int]$LoraRank = 16,
     [int]$LoraAlpha = 32,
     [double]$LearningRate = 0.0001,
