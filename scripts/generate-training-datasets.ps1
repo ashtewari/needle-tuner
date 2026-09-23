@@ -90,8 +90,8 @@ if (-not $SkipJsonlExports) {
     ConvertTo-CanonicalLf -Path $standardSummaryPath
 }
 
-if ((Get-LineCount -Path $standardJsonlPath) -ne 345) {
-    throw "Expected 345 rows in $standardJsonlPath."
+if ((Get-LineCount -Path $standardJsonlPath) -ne 350) {
+    throw "Expected 350 rows in $standardJsonlPath."
 }
 
 $writer = [System.IO.StreamWriter]::new($oversamplePath, $false, [System.Text.UTF8Encoding]::new($false))
@@ -121,12 +121,12 @@ finally {
     $writer.Dispose()
 }
 
-if ($unclearRows -ne 46 -or $oversampledRows -ne 391) {
-    throw "Expected 46 UNCLEAR source rows and 391 oversampled rows; found $unclearRows and $oversampledRows."
+if ($unclearRows -ne 46 -or $oversampledRows -ne 396) {
+    throw "Expected 46 UNCLEAR source rows and 396 oversampled rows; found $unclearRows and $oversampledRows."
 }
 
 Assert-IntegrityHash -IntegrityManifestPath $integrityManifestPath -RelativePath 'Dataset/needle-training-seed.300.json' -Path $expandedSeedPath
 Assert-IntegrityHash -IntegrityManifestPath $integrityManifestPath -RelativePath 'Dataset/training_set.300.jsonl' -Path $standardJsonlPath
 Assert-IntegrityHash -IntegrityManifestPath $integrityManifestPath -RelativePath 'Dataset/training_set.300.oversample_unclear.jsonl' -Path $oversamplePath
 
-Write-Host "Generated deterministic dataset artifacts: expanded=345, standard=345, oversample=391."
+Write-Host "Generated deterministic dataset artifacts: expanded=350, standard=350, oversample=396."

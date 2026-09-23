@@ -72,6 +72,25 @@ bounded to one epoch.
 | Smoke test | Verify one locally prepared training pass | One epoch |
 | Full run | Produce and evaluate a new candidate | Explicit request only |
 
+### Standing authorization to iterate without re-asking
+
+A user may explicitly tell the agent to stop asking for confirmation before
+each step of the loop (for example, "do not ask me again, decide the next
+steps and continue"). Once a user has given that standing authorization
+within a session, treat it as satisfying the "explicit user request" gate for
+every subsequent smoke test and full run in that same loop: keep analyzing
+results, deciding the next single dataset-or-hyperparameter lever, launching
+the next bounded smoke test or full run, evaluating it, and appending the
+outcome to `docs/experiments/EXPERIMENT_LOG.md`, without pausing to ask
+permission again for each individual run. This does not relax any other
+safety rule in this skill: still never auto-promote a candidate, never
+auto-execute a predicted inventory action, never train on the held-out set,
+never edit the frozen OpenAI baseline, and still stop and surface findings
+(rather than silently continuing) if a run fails closed, if five consecutive
+targeted iterations fail to improve the best held-out intent accuracy, or if
+the next step would require a decision this skill reserves for humans (e.g.
+release or production promotion).
+
 ## 1. Bounded validation (default)
 
 From the repository root, run only these non-training checks:

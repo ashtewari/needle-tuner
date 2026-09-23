@@ -26,12 +26,12 @@
       "path": "needle-training-seed.json",
       "kind": "training-source",
       "provenance": "authored",
-      "expectedRows": 167,
+      "expectedRows": 172,
       "expectedIntentCounts": {
-        "SEARCH_ITEM": 18,
-        "ADD_ITEM": 12,
-        "UPDATE_ITEM": 27,
-        "DELETE_ITEM": 12,
+        "SEARCH_ITEM": 19,
+        "ADD_ITEM": 14,
+        "UPDATE_ITEM": 28,
+        "DELETE_ITEM": 13,
         "MANAGE_BOX": 21,
         "VIEW_INVENTORY": 20,
         "UPLOAD_PHOTO": 14,
@@ -44,12 +44,12 @@
       "kind": "training-source-expanded",
       "provenance": "generated",
       "input": "needle-training-seed.json",
-      "expectedRows": 345,
+      "expectedRows": 350,
       "expectedIntentCounts": {
-        "SEARCH_ITEM": 40,
-        "ADD_ITEM": 30,
-        "UPDATE_ITEM": 53,
-        "DELETE_ITEM": 30,
+        "SEARCH_ITEM": 41,
+        "ADD_ITEM": 32,
+        "UPDATE_ITEM": 54,
+        "DELETE_ITEM": 31,
         "MANAGE_BOX": 44,
         "VIEW_INVENTORY": 43,
         "UPLOAD_PHOTO": 32,
@@ -62,35 +62,35 @@
       "kind": "training-jsonl",
       "provenance": "generated",
       "input": "needle-training-seed.json",
-      "expectedRows": 167
+      "expectedRows": 172
     },
     {
       "path": "training_set.seed.summary.json",
       "kind": "training-summary",
       "provenance": "generated",
       "input": "training_set.seed.jsonl",
-      "expectedRows": 167
+      "expectedRows": 172
     },
     {
       "path": "training_set.300.jsonl",
       "kind": "training-jsonl",
       "provenance": "generated",
       "input": "needle-training-seed.300.json",
-      "expectedRows": 345
+      "expectedRows": 350
     },
     {
       "path": "training_set.300.summary.json",
       "kind": "training-summary",
       "provenance": "generated",
       "input": "training_set.300.jsonl",
-      "expectedRows": 345
+      "expectedRows": 350
     },
     {
       "path": "training_set.300.oversample_unclear.jsonl",
       "kind": "training-jsonl-oversampled",
       "provenance": "generated",
       "input": "training_set.300.jsonl",
-      "expectedRows": 391
+      "expectedRows": 396
     }
   ],
   "generatorContract": {
@@ -98,10 +98,10 @@
       "command": "pwsh -NoProfile -File scripts\\generate-training-datasets.ps1",
       "input": "needle-training-seed.json",
       "output": "needle-training-seed.300.json",
-      "requiredRows": 345,
+      "requiredRows": 350,
       "canonicalization": "UTF-8 without BOM and LF line endings.",
       "requires": [
-        "167 unique normalized input queries in the authored seed",
+        "172 unique normalized input queries in the authored seed",
         "fixed templates and cases",
         "ordinal case-insensitive duplicate rejection",
         "no random shuffle",
@@ -117,13 +117,13 @@
           "source": "needle-training-seed.json",
           "output": "training_set.seed.jsonl",
           "summary": "training_set.seed.summary.json",
-          "requiredRows": 167
+          "requiredRows": 172
         },
         {
           "source": "needle-training-seed.300.json",
           "output": "training_set.300.jsonl",
           "summary": "training_set.300.summary.json",
-          "requiredRows": 345
+          "requiredRows": 350
         }
       ]
     },
@@ -131,8 +131,8 @@
       "owner": "Automation backlog item #11",
       "input": "training_set.300.jsonl",
       "output": "training_set.300.oversample_unclear.jsonl",
-      "requiredRows": 391,
-      "algorithm": "Preserve the 345-row source order. Emit every source row once and emit a second adjacent byte-identical row only when answers is empty (the 46 UNCLEAR examples).",
+      "requiredRows": 396,
+      "algorithm": "Preserve the 350-row source order. Emit every source row once and emit a second adjacent byte-identical row only when answers is empty (the 46 UNCLEAR examples).",
       "postcondition": "The regenerated output must match its integrity.manifest.json SHA-256 entry.",
       "mustNot": [
         "shuffle records",

@@ -536,10 +536,10 @@ foreach ($case in $unclearCases) {
 }
 
 $targetCounts = [ordered]@{
-    SEARCH_ITEM = 40
-    ADD_ITEM = 30
-    UPDATE_ITEM = 53
-    DELETE_ITEM = 30
+    SEARCH_ITEM = 41
+    ADD_ITEM = 32
+    UPDATE_ITEM = 54
+    DELETE_ITEM = 31
     MANAGE_BOX = 44
     VIEW_INVENTORY = 43
     UPLOAD_PHOTO = 32
@@ -559,8 +559,8 @@ foreach ($entry in $targetCounts.GetEnumerator()) {
     }
 }
 
-if ($examples.Count -ne 345) {
-    throw "Expected 345 total examples, found $($examples.Count)"
+if ($examples.Count -ne 350) {
+    throw "Expected 350 total examples, found $($examples.Count)"
 }
 
 $examples | ConvertTo-Json -Depth 6 | Set-Content -Path $newSourcePath -Encoding utf8NoBOM

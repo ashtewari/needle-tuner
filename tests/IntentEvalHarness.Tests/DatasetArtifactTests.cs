@@ -14,15 +14,15 @@ public sealed class DatasetArtifactTests
 
     private static readonly IReadOnlyDictionary<string, int> SeedCounts = new Dictionary<string, int>
     {
-        ["SEARCH_ITEM"] = 18, ["ADD_ITEM"] = 12, ["UPDATE_ITEM"] = 27,
-        ["DELETE_ITEM"] = 12, ["MANAGE_BOX"] = 21, ["VIEW_INVENTORY"] = 20,
+        ["SEARCH_ITEM"] = 19, ["ADD_ITEM"] = 14, ["UPDATE_ITEM"] = 28,
+        ["DELETE_ITEM"] = 13, ["MANAGE_BOX"] = 21, ["VIEW_INVENTORY"] = 20,
         ["UPLOAD_PHOTO"] = 14, ["GENERAL_HELP"] = 13, ["UNCLEAR"] = 30
     };
 
     private static readonly IReadOnlyDictionary<string, int> ExpandedCounts = new Dictionary<string, int>
     {
-        ["SEARCH_ITEM"] = 40, ["ADD_ITEM"] = 30, ["UPDATE_ITEM"] = 53,
-        ["DELETE_ITEM"] = 30, ["MANAGE_BOX"] = 44, ["VIEW_INVENTORY"] = 43,
+        ["SEARCH_ITEM"] = 41, ["ADD_ITEM"] = 32, ["UPDATE_ITEM"] = 54,
+        ["DELETE_ITEM"] = 31, ["MANAGE_BOX"] = 44, ["VIEW_INVENTORY"] = 43,
         ["UPLOAD_PHOTO"] = 32, ["GENERAL_HELP"] = 27, ["UNCLEAR"] = 46
     };
 
@@ -49,8 +49,8 @@ public sealed class DatasetArtifactTests
         }
 
         var contract = root.GetProperty("generatorContract");
-        Assert.Equal(345, contract.GetProperty("expandedSeed").GetProperty("requiredRows").GetInt32());
-        Assert.Equal(391, contract.GetProperty("unclearOversample").GetProperty("requiredRows").GetInt32());
+        Assert.Equal(350, contract.GetProperty("expandedSeed").GetProperty("requiredRows").GetInt32());
+        Assert.Equal(396, contract.GetProperty("unclearOversample").GetProperty("requiredRows").GetInt32());
         Assert.Equal("Automation backlog item #11", contract.GetProperty("unclearOversample").GetProperty("owner").GetString());
         Assert.Equal("pwsh -NoProfile -File scripts\\generate-training-datasets.ps1", contract.GetProperty("expandedSeed").GetProperty("command").GetString());
         Assert.Contains("integrity.manifest.json", contract.GetProperty("expandedSeed").GetProperty("postcondition").GetString());
@@ -64,8 +64,8 @@ public sealed class DatasetArtifactTests
         var expanded = ReadSourceRows("needle-training-seed.300.json");
 
         AssertSourceCorpus(heldOut, 45, HeldOutCounts);
-        AssertSourceCorpus(seed, 167, SeedCounts);
-        AssertSourceCorpus(expanded, 345, ExpandedCounts);
+        AssertSourceCorpus(seed, 172, SeedCounts);
+        AssertSourceCorpus(expanded, 350, ExpandedCounts);
         Assert.DoesNotContain("\r\n", File.ReadAllText(Path.Combine(DatasetDirectory, "needle-training-seed.300.json")));
 
         var heldOutInputs = heldOut.Select(row => Normalize(row.GetProperty("input").GetString()!)).ToHashSet(StringComparer.Ordinal);
@@ -76,11 +76,11 @@ public sealed class DatasetArtifactTests
     [Fact]
     public void JsonlExports_FollowSourceOrderAndCurrentCounts()
     {
-        AssertJsonlMatchesSource("needle-training-seed.json", "training_set.seed.jsonl", 167);
-        AssertJsonlMatchesSource("needle-training-seed.300.json", "training_set.300.jsonl", 345);
+        AssertJsonlMatchesSource("needle-training-seed.json", "training_set.seed.jsonl", 172);
+        AssertJsonlMatchesSource("needle-training-seed.300.json", "training_set.300.jsonl", 350);
 
-        AssertSummary("training_set.seed.summary.json", "Dataset/needle-training-seed.json", 167, SeedCounts, 30);
-        AssertSummary("training_set.300.summary.json", "Dataset/needle-training-seed.300.json", 345, ExpandedCounts, 46);
+        AssertSummary("training_set.seed.summary.json", "Dataset/needle-training-seed.json", 172, SeedCounts, 30);
+        AssertSummary("training_set.300.summary.json", "Dataset/needle-training-seed.300.json", 350, ExpandedCounts, 46);
     }
 
     [Fact]
@@ -88,7 +88,7 @@ public sealed class DatasetArtifactTests
     {
         var sourceRows = File.ReadAllLines(Path.Combine(DatasetDirectory, "training_set.300.jsonl"));
         var oversampledRows = File.ReadAllLines(Path.Combine(DatasetDirectory, "training_set.300.oversample_unclear.jsonl"));
-        var expectedRows = new List<string>(391);
+        var expectedRows = new List<string>(396);
 
         foreach (var row in sourceRows)
         {
@@ -100,8 +100,8 @@ public sealed class DatasetArtifactTests
             }
         }
 
-        Assert.Equal(345, sourceRows.Length);
-        Assert.Equal(391, oversampledRows.Length);
+        Assert.Equal(350, sourceRows.Length);
+        Assert.Equal(396, oversampledRows.Length);
         Assert.Equal(expectedRows, oversampledRows);
         Assert.Equal(46, sourceRows.Count(row => JsonDocument.Parse(row).RootElement.GetProperty("answers").GetArrayLength() == 0));
     }
