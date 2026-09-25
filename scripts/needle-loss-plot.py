@@ -109,7 +109,7 @@ def render(log_path: Path, output_path: Path) -> None:
         x_min, x_max = x_min - 1, x_max + 1
     y_ticks, y_axis_min, y_axis_max = nice_ticks(y_min, y_max)
 
-    width, height, left, right, top, bottom = 1280, 720, 96, 40, 64, 96
+    width, height, left, right, top, bottom = 1280, 720, 96, 40, 92, 96
     plot_width, plot_height = width - left - right, height - top - bottom
     map_x = lambda value: left + (value - x_min) / (x_max - x_min) * plot_width
     map_y = lambda value: top + (y_axis_max - value) / (y_axis_max - y_axis_min) * plot_height
@@ -146,6 +146,26 @@ def render(log_path: Path, output_path: Path) -> None:
     ]
     for points, color in ((epoch_train_points, "#d97706"), (epoch_val_points, "#0f766e")):
         lines.extend(f'<circle cx="{map_x(x):.2f}" cy="{map_y(y):.2f}" r="4" fill="{color}" />' for x, y in points)
+
+    legend_items = [("Step loss", "#64748b"), ("Epoch train loss", "#d97706")]
+    if epoch_val_points:
+        legend_items.append(("Epoch val loss", "#0f766e"))
+    legend_width, legend_row_height, legend_padding = 190, 20, 12
+    legend_height = legend_padding * 2 + legend_row_height * len(legend_items) - (legend_row_height - 14)
+    legend_x = left + plot_width - legend_width - 12
+    legend_y = top + 12
+    lines.append(
+        f'<rect x="{legend_x}" y="{legend_y}" width="{legend_width}" height="{legend_height}" '
+        'fill="#ffffff" fill-opacity="0.9" stroke="#cbd5e1" rx="4" />'
+    )
+    for index, (label, color) in enumerate(legend_items):
+        row_y = legend_y + legend_padding + 14 + index * legend_row_height
+        lines += [
+            f'<line x1="{legend_x + 12}" y1="{row_y - 4}" x2="{legend_x + 32}" y2="{row_y - 4}" '
+            f'stroke="{color}" stroke-width="3" stroke-linecap="round" />',
+            f'<text x="{legend_x + 40}" y="{row_y}" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#334155">{html.escape(label)}</text>',
+        ]
+
     latest = []
     if step_losses:
         latest.append(f"step {int(step_losses[-1][0])} loss {step_losses[-1][1]:.4f}")
@@ -155,7 +175,7 @@ def render(log_path: Path, output_path: Path) -> None:
         latest.append(f"val {epoch_val[-1][1]:.4f}")
     lines += [
         f'<text x="{left}" y="{height - 34}" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#334155">Epoch progression</text>',
-        f'<text x="{left}" y="{top - 16}" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#334155">Loss</text>',
+        f'<text x="{left}" y="{top - 12}" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#334155">Loss</text>',
         f'<text x="{left + plot_width}" y="{height - 34}" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#475569">{html.escape(" | ".join(latest))}</text>',
         "</svg>",
     ]
