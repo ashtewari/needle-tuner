@@ -17,6 +17,46 @@ Use the official Microsoft/.NET, PowerShell, Python, and NVIDIA WSL
 installation instructions for those host prerequisites. This repository's
 scripts do not install system packages, GPU drivers, or WSL itself.
 
+### No-admin install of .NET and PowerShell
+
+A brand-new WSL distro (e.g. a fresh Ubuntu image) typically has none of
+`dotnet`, `pwsh`, or Python 3.12 preinstalled, and its default `python3` may
+already be newer than 3.12. The commands below install .NET and PowerShell
+into `$HOME` without `sudo`, which is useful when the distro's package
+repositories don't yet carry a matching `dotnet-sdk`/`powershell` package
+(common right after a new Ubuntu LTS release):
+
+```bash
+# .NET SDK pinned by global.json, into $HOME/.dotnet (no sudo)
+curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+bash /tmp/dotnet-install.sh --version 9.0.310 --install-dir "$HOME/.dotnet"
+
+# PowerShell, into $HOME/powershell (no sudo). The generic
+# ".../releases/latest/download/powershell-linux-x64.tar.gz" URL 404s;
+# resolve the real, version-suffixed asset URL first.
+pwsh_url="$(curl -s https://api.github.com/repos/PowerShell/PowerShell/releases/latest \
+  | grep -oE 'https://[^"]*linux-x64\.tar\.gz' | head -1)"
+curl -sSL -o /tmp/pwsh.tar.gz "$pwsh_url"
+mkdir -p "$HOME/powershell"
+tar xf /tmp/pwsh.tar.gz -C "$HOME/powershell"
+chmod +x "$HOME/powershell/pwsh"
+
+export PATH="$HOME/.dotnet:$HOME/powershell:$PATH"
+export DOTNET_ROOT="$HOME/.dotnet"
+```
+
+If `dotnet` then fails with `Couldn't find a valid ICU package installed on
+the system` (missing `libicu`, seen on newer Ubuntu images), avoid an
+admin-requiring `apt install libicu`/`icu-libs` by setting invariant
+globalization instead:
+
+```bash
+export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+```
+
+Add these `export`s to `~/.bashrc` (or re-run them per shell) so every
+terminal picks up the same `dotnet`/`pwsh`.
+
 From the clone:
 
 ```bash
@@ -47,6 +87,18 @@ bash scripts/needle-finetune.sh --smoke-test --dry-run
 The dry runs do not create environments, native libraries, weights, or
 checkpoints. The dataset generator creates or verifies only the authored
 dataset derivatives and their integrity hashes.
+
+`dotnet test` can fail two pinned-hash checks
+(`IntegrityManifestTests.IntegrityManifest_FileHashesMatchPinnedValues` and
+`ReleaseEvidenceBundleTests.ValidationBundle_IsSelfContainedSanitizedAndChecksumCovered`)
+on an otherwise clean, unmodified clone: `.gitattributes` normalizes checked-out
+text files to `eol=lf`, but `IntentEvalHarness/integrity.manifest.json` pins
+byte counts/hashes computed against a CRLF copy of
+`IntentEvalHarness/Dataset/intent-eval-dataset.json`. Confirm with
+`git status --porcelain` that the file is unmodified before assuming a local
+problem; this is a known manifest/`.gitattributes` mismatch, not something to
+fix by editing the held-out dataset or the manifest without a deliberate,
+separate decision.
 
 ## 3. Prepare the Python environment
 
